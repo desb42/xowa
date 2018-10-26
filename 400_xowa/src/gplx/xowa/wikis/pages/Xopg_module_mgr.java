@@ -20,28 +20,32 @@ public class Xopg_module_mgr {
 	public boolean Imap_exists() {return imap_exists;} public void Imap_exists_(boolean v) {imap_exists = v;} private boolean imap_exists;
 	public boolean Gallery_packed_exists() {return gallery_packed_exists;} public void Gallery_packed_exists_(boolean v) {gallery_packed_exists = v;} private boolean gallery_packed_exists;
 	public boolean Hiero_exists() {return hiero_exists;} public void Hiero_exists_(boolean v) {hiero_exists = v;} private boolean hiero_exists;
-	public void Init(boolean math, boolean imap, boolean packed, boolean hiero) {
+	public boolean Graph_exists() {return graph_exists;} public void Graph_exists_(boolean v) {graph_exists = v;} private boolean graph_exists;
+	public void Init(boolean math, boolean imap, boolean packed, boolean hiero, boolean graph) {
 		this.math_exists = math;
 		this.imap_exists = imap;
 		this.gallery_packed_exists = packed;
 		this.hiero_exists = hiero;
+		this.graph_exists = graph;
 	}
-	public int Flag() {return Calc_flag(math_exists, imap_exists, gallery_packed_exists, hiero_exists);}
+	public int Flag() {return Calc_flag(math_exists, imap_exists, gallery_packed_exists, hiero_exists, graph_exists);}
 	public void Flag_(int v) {
 		this.math_exists			= Bitmask_.Has_int(v, Tid_math);
 		this.imap_exists			= Bitmask_.Has_int(v, Tid_imap);
 		this.gallery_packed_exists	= Bitmask_.Has_int(v, Tid_packed);
 		this.hiero_exists			= Bitmask_.Has_int(v, Tid_hiero);
+		this.graph_exists			= Bitmask_.Has_int(v, Tid_graph);
 	}
 	public void Clear() {
-		math_exists = imap_exists = gallery_packed_exists = hiero_exists = false;
+		math_exists = imap_exists = gallery_packed_exists = hiero_exists = graph_exists = false;
 	}
-	private static int Calc_flag(boolean math, boolean imap, boolean packed, boolean hiero) {
+	private static int Calc_flag(boolean math, boolean imap, boolean packed, boolean hiero, boolean graph) {
 		int rv = 0;
 		if (math)			rv = Bitmask_.Add_int(rv, Tid_math);
 		if (imap)			rv = Bitmask_.Add_int(rv, Tid_imap);
 		if (packed)			rv = Bitmask_.Add_int(rv, Tid_packed);
 		if (hiero)			rv = Bitmask_.Add_int(rv, Tid_hiero);
+		if (graph)			rv = Bitmask_.Add_int(rv, Tid_graph);
 		return rv;
 	}
 	private static final int		// SERIALIZED; only supports 8 different types
@@ -49,6 +53,7 @@ public class Xopg_module_mgr {
 	, Tid_imap		= 2
 	, Tid_packed	= 4
 	, Tid_hiero		= 8
+	, Tid_graph		= 16
 	;
 	public static final int Tid_null = 0;
 }

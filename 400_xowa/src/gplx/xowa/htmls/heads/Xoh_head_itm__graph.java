@@ -18,6 +18,9 @@ import gplx.xowa.guis.*;
 import gplx.xowa.wikis.pages.tags.*;
 public class Xoh_head_itm__graph extends Xoh_head_itm__base {
 	private boolean version_is_1, version_is_2;
+        Xoh_head_itm__graph() {
+            version_is_2 = true; // default to v2
+        }
 	@Override public byte[] Key() {return Xoh_head_itm_.Key__graph;}
 	@Override public int Flags() {return Flag__js_include | Flag__js_window_onload;}
 	public void Version_(Xoa_url url, int v) {

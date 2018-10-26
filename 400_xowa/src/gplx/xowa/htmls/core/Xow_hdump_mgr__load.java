@@ -112,6 +112,7 @@ public class Xow_hdump_mgr__load implements Gfo_invk {
 		wpg_head.Itm__gallery_styles().Enabled_	(hpg.Xtn__gallery_exists());
 		wpg_head.Itm__toc().Enabled_(hpg.Html_data().Toc_mgr().Exists());
 		wpg_head.Itm__pgbnr().Enabled_(hpg.Html_data().Head_mgr().Itm__pgbnr().Enabled());
+                wpg_head.Itm__graph().Enabled_			(hpg_head.Graph_exists());
 
 		// transfer Xtn_gallery_packed_exists; needed for hdump; PAGE:en.w:Mexico; DATE:2016-08-14
 		if (hpg.Html_data().Xtn_gallery_packed_exists())
