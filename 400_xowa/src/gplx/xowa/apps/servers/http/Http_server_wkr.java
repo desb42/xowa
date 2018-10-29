@@ -18,6 +18,9 @@ import gplx.core.ios.*; import gplx.core.ios.streams.*;
 import gplx.core.primitives.*; import gplx.core.net.*; import gplx.langs.htmls.encoders.*;
 import gplx.xowa.apps.*;
 import gplx.xowa.htmls.js.*;
+import gplx.xowa.wikis.pages.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 class Http_server_wkr implements Gfo_invk {
 	private final    int uid;
 	private final    Http_server_mgr server_mgr;
@@ -97,7 +100,13 @@ class Http_server_wkr implements Gfo_invk {
 		byte[] cmd = Bry_.Mid(url, tkn_bgn.length);
 		app.Http_server().Run_xowa_cmd(app, String_.new_u8(cmd));
 	}
-	private void Write_wiki(byte[] req) {
+	private void Write_wiki(byte[] url) {
+		int url_len = url.length;
+		tmp_bfr.Clear();
+		int question_pos = Bry_find_.Find_fwd(url, Byte_ascii.Question);
+		int url_end = question_pos == Bry_find_.Not_found ? url_len : question_pos;
+		url_encoder.Decode(tmp_bfr, Bool_.N, url, 0, url_end);
+		byte[] req = tmp_bfr.To_bry_and_clear();
 		String wiki_domain = ""; String page_name = "";
 		String[] req_split = String_.Split(String_.new_u8(req), "/");
 		if(req_split.length >= 1){
@@ -108,9 +117,28 @@ class Http_server_wkr implements Gfo_invk {
 			for(int i = 4; i <= req_split.length-1; i++){
 				page_name += "/" + req_split[i];
 			}
-			page_name = url_encoder.Decode_str(page_name);
 		}
-		String page_html = app.Http_server().Parse_page_to_html(data__client, Bry_.new_u8(wiki_domain), Bry_.new_u8(page_name));
+		// check the query string for 'action='
+		byte mode = Xopg_page_.Tid_read;
+		boolean popup_flag = false;
+		if (question_pos != Bry_find_.Not_found) {
+			int pos = question_pos+1+http_action.length;
+			if (pos < url_len && Bry_.Has_at_bgn(url, http_action, question_pos+1, pos)) {
+				if (Bry_.Eq(url, pos, url_len, http_action_read))
+					mode = Xopg_page_.Tid_read;
+				else if (Bry_.Eq(url, pos, url_len, http_action_edit))
+					mode = Xopg_page_.Tid_edit;
+				else if (Bry_.Eq(url, pos, url_len, http_action_html))
+					mode = Xopg_page_.Tid_html;
+				else if (Bry_.Eq(url, pos, url_len, http_action_popup))
+					popup_flag = true;
+			}
+		}
+		if (page_name.startsWith("Special:") && question_pos != Bry_find_.Not_found) {
+			tmp_bfr.Add_mid(url, question_pos, url_len);
+			page_name += String_.new_u8(tmp_bfr.To_bry_and_clear());
+		}
+		String page_html = app.Http_server().Parse_page_to_html(data__client, Bry_.new_u8(wiki_domain), Bry_.new_u8(page_name), mode, popup_flag);
 		page_html = Convert_page(page_html, root_dir_http, wiki_domain);
 		Xosrv_http_wkr_.Write_response_as_html(client_wtr, Bool_.N, page_html);
 	}
@@ -158,6 +186,14 @@ class Http_server_wkr implements Gfo_invk {
 	, Url__exec = Bry_.new_a7("/exec/"), Url__exec_2 = Bry_.new_a7("/xowa-cmd:")
 	;
 	private static final    int Url__fsys_len = Url__fsys.length;
+
+	public static final    byte[]
+	  http_action = Bry_.new_a7("action=")
+	, http_action_read = Bry_.new_a7("read")
+	, http_action_edit = Bry_.new_a7("edit")
+	, http_action_html = Bry_.new_a7("html")
+	, http_action_popup = Bry_.new_a7("popup")
+	;
 }
 class Xosrv_http_wkr_ {
 	public static void Write_response_as_html(Http_client_wtr client_wtr, boolean cross_domain, String html) {Write_response_as_html(client_wtr, cross_domain, Bry_.new_u8(html));}

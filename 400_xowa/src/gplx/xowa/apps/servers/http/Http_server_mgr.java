@@ -90,7 +90,7 @@ public class Http_server_mgr implements Gfo_invk {
 		String cmd = url_converter.Decode_str(url_encoded_str);
 		app.Gfs_mgr().Run_str(cmd);
 	}
-	public String Parse_page_to_html(Http_data__client data__client, byte[] wiki_domain, byte[] ttl_bry) {
+	public String Parse_page_to_html(Http_data__client data__client, byte[] wiki_domain, byte[] ttl_bry, byte mode, boolean popup_flag) {
 		synchronized (thread_lock) {
 			// create a shim gui to automatically handle default XOWA gui JS calls
 			if (init_gui_needed) {
@@ -118,7 +118,11 @@ public class Http_server_mgr implements Gfo_invk {
 			page.Html_data().Head_mgr().Itm__server().Init_by_http(data__client).Enabled_y_();
 
 			// generate html
-			String rv = String_.new_u8(wiki.Html_mgr().Page_wtr_mgr().Gen(page, Xopg_page_.Tid_read)); // NOTE: must generate HTML now in order for "wait" and "async_server" to work with text_dbs; DATE:2016-07-10
+			String rv;
+			if (popup_flag)
+				rv = wiki.Html_mgr().Head_mgr().Popup_mgr().Show_init(1, ttl_bry, ttl_bry);
+			else {
+				rv = String_.new_u8(wiki.Html_mgr().Page_wtr_mgr().Gen(page, mode)); // NOTE: must generate HTML now in order for "wait" and "async_server" to work with text_dbs; DATE:2016-07-10
 			boolean rebuild_html = false;
 			switch (retrieve_mode) {
 				case File_retrieve_mode.Mode_skip:	// noop
@@ -133,7 +137,8 @@ public class Http_server_mgr implements Gfo_invk {
 					page = wiki.Page_mgr().Load_page(url, ttl, tab);	// HACK: fetch page again so that HTML will now include img data
 					break;
 			}
-			if (rebuild_html) rv = String_.new_u8(wiki.Html_mgr().Page_wtr_mgr().Gen(page, Xopg_page_.Tid_read));
+				if (rebuild_html) rv = String_.new_u8(wiki.Html_mgr().Page_wtr_mgr().Gen(page, mode));
+			}
 			return rv;
 		}
 	}
