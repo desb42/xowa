@@ -79,7 +79,8 @@ public class Xow_portal_mgr implements Gfo_invk {
 		div_home_bry = Init_fmtr(tmp_bfr, eval_mgr, div_home_fmtr);
 		div_wikis_fmtr.Eval_mgr_(eval_mgr);
 		Xow_msg_mgr msg_mgr = wiki.Msg_mgr();
-		div_jump_to = Div_jump_to_fmtr.Bld_bry_many(tmp_bfr, msg_mgr.Val_by_key_obj("jumpto"), msg_mgr.Val_by_key_obj("jumptonavigation"), msg_mgr.Val_by_key_obj("comma-separator"), msg_mgr.Val_by_key_obj("jumptosearch"));
+		if (!wiki.App().Mode().Tid_is_http())
+			div_jump_to = Div_jump_to_fmtr.Bld_bry_many(tmp_bfr, msg_mgr.Val_by_key_obj("jumpto"), msg_mgr.Val_by_key_obj("jumptonavigation"), msg_mgr.Val_by_key_obj("comma-separator"), msg_mgr.Val_by_key_obj("jumptosearch"));
 		tmp_bfr.Mkr_rls();
 		sidebar_mgr.Init_by_wiki();
 	}	private boolean init_needed = true;
@@ -129,7 +130,7 @@ public class Xow_portal_mgr implements Gfo_invk {
 		Xow_ns ns = ns_mgr.Ids_get_or_null(ns_id);
 		return ns == null || ns.Exists() ? Bry_.Empty : missing_ns_cls;			
 	}
-	public byte[] Div_view_bry(Bry_bfr_mkr bfr_mkr, byte output_tid, byte[] search_text) {
+	public byte[] Div_view_bry(Bry_bfr_mkr bfr_mkr, byte output_tid, byte[] search_text, Xoa_ttl ttl) {
 		Bry_bfr tmp_bfr = bfr_mkr.Get_k004();
 		byte[] read_cls = Bry_.Empty, edit_cls = Bry_.Empty, html_cls = Bry_.Empty;
 		switch (output_tid) {
@@ -137,7 +138,20 @@ public class Xow_portal_mgr implements Gfo_invk {
 			case Xopg_page_.Tid_edit: edit_cls = Cls_selected_y; break;
 			case Xopg_page_.Tid_html: html_cls = Cls_selected_y; break;
 		}
-		div_view_fmtr.Bld_bfr_many(tmp_bfr, read_cls, edit_cls, html_cls, search_text);
+		byte[] read_href = xowa_read_query;
+		byte[] edit_href = xowa_edit_query;
+		byte[] html_href = xowa_html_query;
+		if (wiki.App().Mode().Tid_is_http()) {
+			byte[] subj_href = Xoh_html_wtr_escaper.Escape(Xop_amp_mgr.Instance, tmp_bfr, Bry_.Add(Xoh_href_.Bry__wiki, ttl.Full_db()));
+			tmp_bfr.Clear();
+			tmp_bfr.Add(subj_href); //.Add(read_query); unnecessary
+			read_href = tmp_bfr.To_bry_and_clear();
+			tmp_bfr.Add(subj_href).Add(edit_query);
+			edit_href = tmp_bfr.To_bry_and_clear();
+			tmp_bfr.Add(subj_href).Add(html_query);
+			html_href = tmp_bfr.To_bry_and_clear();
+		}
+		div_view_fmtr.Bld_bfr_many(tmp_bfr, read_cls, edit_cls, html_cls, search_text, read_href, edit_href, html_href);
 		return tmp_bfr.To_bry_and_rls();
 	}	public static final    byte[] Cls_selected_y = Bry_.new_a7("selected"), Cls_new = Bry_.new_a7("new"), Cls_display_none = Bry_.new_a7("xowa_display_none");
 	public byte[] Div_logo_bry(boolean nightmode) {return nightmode ? div_logo_night : div_logo_day;} private byte[] div_logo_day = Bry_.Empty, div_logo_night = Bry_.Empty;
@@ -161,7 +175,7 @@ public class Xow_portal_mgr implements Gfo_invk {
 	private final    Bry_fmtr 
 	  div_personal_fmtr = Bry_fmtr.new_("~{portal_personal_subj_href};~{portal_personal_subj_text};~{portal_personal_talk_cls};~{portal_personal_talk_href};~{portal_personal_talk_cls};", "portal_personal_subj_href", "portal_personal_subj_text", "portal_personal_subj_cls", "portal_personal_talk_href", "portal_personal_talk_cls")
 	, div_ns_fmtr = Bry_fmtr.new_("~{portal_ns_subj_href};~{portal_ns_subj_cls};~{portal_ns_talk_href};~{portal_ns_talk_cls};~{portal_div_vnts}", "portal_ns_subj_href", "portal_ns_subj_cls", "portal_ns_talk_href", "portal_ns_talk_cls", "portal_div_vnts")
-	, div_view_fmtr = Bry_fmtr.new_("", "portal_view_read_cls", "portal_view_edit_cls", "portal_view_html_cls", "search_text")
+	, div_view_fmtr = Bry_fmtr.new_("", "portal_view_read_cls", "portal_view_edit_cls", "portal_view_html_cls", "search_text", "portal_view_read_href", "portal_view_edit_href", "portal_view_html_href")
 	, div_logo_fmtr = Bry_fmtr.new_("", "portal_nav_main_href", "portal_logo_url")
 	, div_sync_fmtr = Bry_fmtr.new_("", "page_url")
 	, div_wikis_fmtr = Bry_fmtr.new_("", "toggle_btn", "toggle_hdr")
@@ -199,5 +213,14 @@ public class Xow_portal_mgr implements Gfo_invk {
 	, Cfg__sidebar_enabled__desktop		= "xowa.html.portal.sidebar_enabled_desktop"
 	, Cfg__sidebar_enabled__server		= "xowa.html.portal.sidebar_enabled_server"
 	, Cfg__divs__footer					= "xowa.html.divs.footer"
+	;
+	
+	private static final byte[]
+	  read_query = Bry_.new_a7("?action=read")
+	, edit_query = Bry_.new_a7("?action=edit")
+	, html_query = Bry_.new_a7("?action=html")
+	, xowa_read_query = Bry_.new_a7("xowa-cmd:app.gui.main_win.page_view_read;")
+	, xowa_edit_query = Bry_.new_a7("xowa-cmd:app.gui.main_win.page_view_edit;")
+	, xowa_html_query = Bry_.new_a7("xowa-cmd:app.gui.main_win.page_view_html;")
 	;
 }
