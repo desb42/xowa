@@ -16,13 +16,21 @@ Apache License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-APACHE2.txt
 package gplx.xowa.xtns.pfuncs.times; import gplx.*; import gplx.xowa.*; import gplx.xowa.xtns.*; import gplx.xowa.xtns.pfuncs.*;
 import gplx.core.brys.*;
 class Pxd_itm_month_name extends Pxd_itm_base implements Pxd_itm_prototype {
+	private int seg_val = 1;
+	private int seg_multiple;
+	private boolean eval_done_by_relative_word;
 	public Pxd_itm_month_name(int ary_idx, byte[] name, int seg_idx, int seg_val) {Ctor(ary_idx); this.name = name; Seg_idx_(seg_idx); this.seg_val = seg_val;} private byte[] name;
 	@Override public byte Tkn_tid() {return Pxd_itm_.Tid_month_name;}
 	@Override public int Eval_idx() {return 20;}
-	int seg_val;
+	//int seg_val;
 	public Pxd_itm MakeNew(int ary_idx) {
 		Pxd_itm_month_name rv = new Pxd_itm_month_name(ary_idx, name, this.Seg_idx(), seg_val);
 		return rv;
+	}
+	public void Unit_seg_val_(int v) {	// handled by relative_word; EX: next april
+		this.seg_val = v;
+		this.seg_multiple = 1;
+		this.eval_done_by_relative_word = true;
 	}
 	@Override public boolean Eval(Pxd_parser state) {
 		state.Seg_idxs_(this, this.Seg_idx(), seg_val);
@@ -319,15 +327,34 @@ class Pxd_itm_unit_relative extends Pxd_itm_base implements Pxd_itm_prototype { 
 	@Override public int Eval_idx() {return 5;}
 	public Pxd_itm MakeNew(int ary_idx) {return new Pxd_itm_unit_relative(adj, ary_idx);}
 	@Override public boolean Eval(Pxd_parser state) {
-		// find next token: EX: sec, hour, day, fortnight, month, etc.
-		Pxd_itm itm = Pxd_itm_.Find_fwd_by_tid(state.Tkns(), this.Ary_idx() + 1, Pxd_itm_.Tid_unit);
-		if (itm == null) state.Err_set(Pft_func_time_log.Invalid_date, Bfr_arg_.New_int(adj));
+		// find next token: EX: sec, hour, day, fortnight, month, etc. (Tid_unit)
+		//   or Month name (Tid_month_name)
+		//   or Day name (Tid_dow_name)
+		Pxd_itm itm = Pxd_itm_.Find_fwd__non_ws(state.Tkns(), this.Ary_idx() + 1);
+		if (itm == null) {state.Err_set(Pft_func_time_log.Invalid_date, Bfr_arg_.New_int(adj));; return false;}
 
+		switch (itm.Tkn_tid()) {
+			case Pxd_itm_.Tid_unit:
+				Pxd_itm_unit unit_tkn = (Pxd_itm_unit)itm;
+				unit_tkn.Unit_seg_val_(adj);
+				break;
+			case Pxd_itm_.Tid_month_name:
+				Pxd_itm_month_name month_tkn = (Pxd_itm_month_name)itm;
+				month_tkn.Unit_seg_val_(adj);
+				break;
+			case Pxd_itm_.Tid_dow_name:
+				Pxd_itm_dow_name day_tkn = (Pxd_itm_dow_name)itm;
+				day_tkn.Unit_seg_val_(adj);
+				break;
+			default:
+				state.Err_set(Pft_func_time_log.Invalid_date, Bfr_arg_.New_int(adj));
+				return false;
+		}
 		// cast to unit; may fail; EX:update in "last update" as per "March 2006 [last update]";PAGE:s.w:Synesthesia;DATE:2016-07-06
-		Pxd_itm_unit unit_tkn = (Pxd_itm_unit)itm;
-		if (unit_tkn == null) {state.Err_set(Pft_func_time_log.Invalid_date, Bfr_arg_.New_int(adj)); return false;}
+		//Pxd_itm_unit unit_tkn = (Pxd_itm_unit)itm;
+		//if (unit_tkn == null) {state.Err_set(Pft_func_time_log.Invalid_date, Bfr_arg_.New_int(adj)); return false;}
 
-		unit_tkn.Unit_seg_val_(adj);
+		//unit_tkn.Unit_seg_val_(adj);
 		return true;
 	}
 	@Override public boolean Time_ini(DateAdpBldr bldr) {return true;}
@@ -362,18 +389,28 @@ class Pxd_itm_unixtime extends Pxd_itm_base implements Pxd_itm_prototype {
 	}
 }
 class Pxd_itm_dow_name extends Pxd_itm_base implements Pxd_itm_prototype {
+	private int seg_val = 1;
+	private int seg_multiple;
+	private boolean eval_done_by_relative_word;
 	private int dow_idx;
 	private byte[] dow_name;
 	public Pxd_itm_dow_name(int ary_idx, byte[] dow_name, int dow_idx) {Ctor(ary_idx); this.dow_name = dow_name; this.Seg_idx_(DateAdp_.SegIdx_dayOfWeek); this.dow_idx = dow_idx;}
 	@Override public byte Tkn_tid() {return Pxd_itm_.Tid_dow_name;}
 	@Override public int Eval_idx() {return 20;}
 	public Pxd_itm MakeNew(int ary_idx) {return new Pxd_itm_dow_name(ary_idx, dow_name, dow_idx);}
+	public void Unit_seg_val_(int v) {	// handled by relative_word; EX: next tuesday
+		this.seg_val = v;
+		this.seg_multiple = 1;
+		this.eval_done_by_relative_word = true;
+	}
 	@Override public boolean Eval(Pxd_parser state) {return true;}
 	@Override public boolean Time_ini(DateAdpBldr bldr) {
-		DateAdp now = Datetime_now.Get();
-		int adj = dow_idx - now.DayOfWeek();	// adj = requested_dow - current_dow; EX: requesting Friday, and today is Wednesday; adj = 2 (4 - 2); DATE:2014-05-02
+		DateAdp cur = bldr.Date();
+		if (cur == null) cur = Datetime_now.Get();
+		int adj = dow_idx - cur.DayOfWeek();	// adj = requested_dow - current_dow; EX: requesting Friday, and today is Wednesday; adj = 2 (4 - 2); DATE:2014-05-02
 		if (adj < 0) adj += 7;					// requested_down is before current_dow; add 7 to get the next day
-		bldr.Date_(bldr.Date().Add_day(adj));
+		cur = cur.Add_day(adj);
+		bldr.Date_(cur);
 		return true;
 	}
 }

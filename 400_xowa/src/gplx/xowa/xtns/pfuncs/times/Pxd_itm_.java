@@ -54,6 +54,14 @@ class Pxd_itm_ {
 		}
 		return null;
 	}
+	public static Pxd_itm Find_fwd__non_ws(Pxd_itm[] tkns, int bgn) {
+		int len = tkns.length;
+		for (int i = bgn; i < len; i++) {
+			Pxd_itm itm = tkns[i];
+			if (itm.Tkn_tid() != Tid_ws) return itm;
+		}
+		return null;
+	}
 	public static Pxd_itm Find_fwd_by_tid(Pxd_itm[] tkns, int bgn, int tid) {
 		int len = tkns.length;
 		for (int i = bgn; i < len; i++) {
