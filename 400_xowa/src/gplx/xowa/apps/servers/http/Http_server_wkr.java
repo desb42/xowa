@@ -174,7 +174,40 @@ class Http_server_wkr implements Gfo_invk {
 		page_html = String_.Replace(page_html, "<a href='/wiki/"	, "<a href='/" + wiki_domain + "/wiki/");
 		page_html = String_.Replace(page_html, "action=\"/wiki/"	, "action=\"/" + wiki_domain + "/wiki/");
 		page_html = String_.Replace(page_html, "/site"				, "");
+		page_html = collapser(page_html);
 		return page_html;
+	}
+	private static String collapser(String html) {
+		String typ;
+		String rep;
+		Pattern p = Pattern.compile("( collapsible ([^ ]*)|\"collapsible ([^\"]*)\")");
+		Matcher m = p.matcher(html);
+		StringBuffer sb = new StringBuffer();
+		int colcount = 0;
+		while (m.find()) {
+			if (m.group(2) != null)
+			{
+				System.out.println(m.group(2));
+				typ = m.group(2);
+				colcount++;
+				if (typ.equals("collapsed"))
+					rep = " collapsible mw-collapsed";
+				else if (typ.equals("autocollapse") && colcount > 1)
+					rep = " collapsible mw-collapsed";
+				else
+					rep = " collapsible " + typ;
+			}
+			else {
+				typ = m.group(3);
+				if (typ.equals("collapsed"))
+					rep = " collapsible mw-collapsed";
+				else
+					rep = " collapsible " + typ + "\"";
+			}
+			m.appendReplacement(sb, rep);
+		}
+		m.appendTail(sb);
+		return sb.toString();
 	}
 	public Object Invk(GfsCtx ctx, int ikey, String k, GfoMsg m) {
 		if		(ctx.Match(k, Invk_run)) {this.Run();}
