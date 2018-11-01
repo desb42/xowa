@@ -32,6 +32,7 @@ package gplx.xowa.apps.servers.http; import gplx.*; import gplx.xowa.*; import g
 import gplx.core.threads.*; import gplx.core.net.*; import gplx.core.primitives.*; import gplx.core.envs.*;
 import gplx.langs.jsons.*; import gplx.langs.htmls.encoders.*;
 import gplx.xowa.wikis.pages.*;
+import gplx.xowa.addons.wikis.searchs.gui.htmlbars.*;
 public class Http_server_mgr implements Gfo_invk {
 	private final    Object thread_lock = new Object();
 	private final    Gfo_usr_dlg usr_dlg;
@@ -90,7 +91,7 @@ public class Http_server_mgr implements Gfo_invk {
 		String cmd = url_converter.Decode_str(url_encoded_str);
 		app.Gfs_mgr().Run_str(cmd);
 	}
-	public String Parse_page_to_html(Http_data__client data__client, byte[] wiki_domain, byte[] ttl_bry, byte mode, boolean popup_flag) {
+	public String Parse_page_to_html(Http_data__client data__client, byte[] wiki_domain, byte[] ttl_bry, byte mode, boolean popup_flag, byte[] search_term) {
 		synchronized (thread_lock) {
 			// create a shim gui to automatically handle default XOWA gui JS calls
 			if (init_gui_needed) {
@@ -102,6 +103,12 @@ public class Http_server_mgr implements Gfo_invk {
 			Xowe_wiki wiki = (Xowe_wiki)app.Wiki_mgr().Get_by_or_make_init_y(wiki_domain);			// assert init for Main_Page; EX:click zh.w on wiki sidebar; DATE:2015-07-19
 			if (Runtime_.Memory_total() > Io_mgr.Len_gb)	Xowe_wiki_.Rls_mem(wiki, true);			// release memory at 1 GB; DATE:2015-09-11
 
+			// if this is search do soemething else
+			if (search_term != null) {
+				Srch_htmlbar_mgr itm = app.Addon_mgr().Itms__search__htmlbar();
+				itm.Search(wiki, search_term, Bry_.new_a7("search_result"));
+				return itm.Get_js_rslt();
+			}
 			// get the url / ttl
 			if (Bry_.Len_eq_0(ttl_bry)) ttl_bry = wiki.Props().Main_page();
 			Xoa_url url = wiki.Utl__url_parser().Parse(ttl_bry);

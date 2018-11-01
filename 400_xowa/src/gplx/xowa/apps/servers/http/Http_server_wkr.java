@@ -101,6 +101,7 @@ class Http_server_wkr implements Gfo_invk {
 		app.Http_server().Run_xowa_cmd(app, String_.new_u8(cmd));
 	}
 	private void Write_wiki(byte[] url) {
+		byte[] search_term = null;
 		int url_len = url.length;
 		tmp_bfr.Clear();
 		int question_pos = Bry_find_.Find_fwd(url, Byte_ascii.Question);
@@ -112,7 +113,11 @@ class Http_server_wkr implements Gfo_invk {
 		if(req_split.length >= 1){
 			wiki_domain = req_split[1];
 		}
-		if(req_split.length >= 4){
+		if(req_split.length >= 2 && req_split[2].equals( "search" )) {
+			if (req_split.length >= 3)
+				search_term = Bry_.new_u8(req_split[3]);
+		}
+		else if(req_split.length >= 4){
 			page_name = req_split[3];
 			for(int i = 4; i <= req_split.length-1; i++){
 				page_name += "/" + req_split[i];
