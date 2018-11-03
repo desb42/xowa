@@ -19,13 +19,12 @@ import com.ibm.icu.text.CollationKey;
 import com.ibm.icu.text.Collator;
 import com.ibm.icu.text.RuleBasedCollator;
 class Uca_collator__icu__4_8 implements Uca_collator {
-	private Collator collator;
+	private RuleBasedCollator collator;
 	public void	Init(String locale, boolean numeric_ordering) {
 		try {
-			this.collator = Collator.getInstance(Locale.forLanguageTag(locale));
+			this.collator = (RuleBasedCollator)Collator.getInstance(Locale.forLanguageTag(locale));
 			if (numeric_ordering) {
-				RuleBasedCollator rbc = (RuleBasedCollator)collator;
-				rbc.setNumericCollation(true);
+				this.collator.setNumericCollation(true);
 			}
 		} catch (Exception e) {throw Err_.new_wo_type("collator init failed", "err", Err_.Message_lang(e));}		
 	}
