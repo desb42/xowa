@@ -36,7 +36,8 @@ public class Xog_async_wkr {
 		Async_imgs(usr_dlg, app, wiki, page, js_wkr);
 		gplx.xowa.xtns.math.Xomath_latex_bldr.Async(app, page, js_wkr);
 		Async_score(usr_dlg, app, page);
-		Async_redlinks(usr_dlg, app, page, js_wkr);
+		if (!wiki.App().Mode().Tid_is_http())
+			Async_redlinks(usr_dlg, app, page, js_wkr);
 
 		// cache maintenance
 		usr_dlg.Prog_none("", "imgs.done", "");

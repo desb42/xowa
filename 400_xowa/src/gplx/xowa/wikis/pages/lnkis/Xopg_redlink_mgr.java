@@ -20,7 +20,7 @@ import gplx.xowa.langs.vnts.*;
 public class Xopg_redlink_mgr implements Gfo_invk {
 	private final    Xoa_page page; private final    Xog_js_wkr js_wkr;
 	public Xopg_redlink_mgr(Xoa_page page, Xog_js_wkr js_wkr) {this.page = page; this.js_wkr = js_wkr;	}
-	private void Redlink() {
+	public void Redlink(Bry_bfr bfr) {
 		// init; exit if redlink disabled (on Module pages)
 		Xopg_lnki_list lnki_list = page.Html_data().Redlink_list(); if (lnki_list.Disabled()) return;
 		Gfo_usr_dlg usr_dlg = Gfo_usr_dlg_.Instance;
@@ -72,13 +72,16 @@ public class Xopg_redlink_mgr implements Gfo_invk {
 
 			// lnki is missing; redlink it
 			if (usr_dlg.Canceled()) return;
-			Js_img_mgr.Update_link_missing(js_wkr, html_uid);
+			if (bfr != null)
+				bfr.Add_byte(Byte_ascii.Comma).Add_byte(Byte_ascii.Quote).Add_str_u8(html_uid).Add_byte(Byte_ascii.Quote);
+			else
+				Js_img_mgr.Update_link_missing(js_wkr, html_uid);
 			++redlink_count;
 		}
 		usr_dlg.Log_many("", "", "redlink.redlink_end: redlinks_run=~{0}", redlink_count);
 	}
 	public Object Invk(GfsCtx ctx, int ikey, String k, GfoMsg m) {
-		if		(ctx.Match(k, Invk_run)) {synchronized (this) {Redlink();}}	// NOTE: attempt to eliminate random IndexBounds errors; DATE:2014-09-02
+		if		(ctx.Match(k, Invk_run)) {synchronized (this) {Redlink(null);}}	// NOTE: attempt to eliminate random IndexBounds errors; DATE:2014-09-02
 		else	return Gfo_invk_.Rv_unhandled;
 		return this;
 	}	public static final String Invk_run = "run";
