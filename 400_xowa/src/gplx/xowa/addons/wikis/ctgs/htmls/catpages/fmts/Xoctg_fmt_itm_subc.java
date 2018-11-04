@@ -22,9 +22,9 @@ class Xoctg_fmt_itm_subc extends Xoctg_fmt_itm_base {
 	private final    Bry_bfr tmp_bfr = Bry_bfr_.New();
 	@Override public void Bld_html(Bry_bfr bfr, Xow_wiki wiki, Xou_history_mgr history_mgr, Xoh_href_parser href_parser, Xoctg_catpage_itm itm, Xoa_ttl ttl) {
 		byte[] itm_href = wiki.Html__href_wtr().Build_to_bry(wiki, ttl);
-		int count_subcs = 0;
-		int count_pages = 0;
-		int count_files = 0;
+		int count_subcs = itm.Count_subcs();
+		int count_pages = itm.Count_pages();
+		int count_files = itm.Count_files();
 		Xow_msg_mgr msg_mgr = wiki.Msg_mgr();
 		byte[] contains_title = wiki.Msg_mgr().Val_by_id_args(Xol_msg_itm_.Id_ctgtree_subc_counts, count_subcs, count_pages, count_files);
 		byte[] contains_text = Bld_contains_text(msg_mgr, count_subcs, count_pages, count_files);

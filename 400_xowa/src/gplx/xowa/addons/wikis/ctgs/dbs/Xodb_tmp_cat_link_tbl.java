@@ -17,7 +17,7 @@ package gplx.xowa.addons.wikis.ctgs.dbs; import gplx.*; import gplx.xowa.*; impo
 import gplx.dbs.*; import gplx.dbs.qrys.*; import gplx.xowa.addons.wikis.ctgs.*; 
 public class Xodb_tmp_cat_link_tbl implements Db_tbl {
 	private final    Dbmeta_fld_list flds = new Dbmeta_fld_list();
-	private final    String fld_from, fld_to_ttl, fld_sortkey, fld_timestamp, fld_sortkey_prefix, fld_collation_id, fld_type_id;
+	private final    String fld_from, fld_to_ttl, fld_sortkey, fld_timestamp, fld_sortkey_prefix, fld_collation_id, fld_type_id, fld_cat_subcats, fld_cat_pages, fld_cat_files;
 	private Db_stmt stmt_insert;
 	public Xodb_tmp_cat_link_tbl(Db_conn conn) {
 		this.conn = conn;
@@ -29,6 +29,9 @@ public class Xodb_tmp_cat_link_tbl implements Db_tbl {
 		this.fld_sortkey_prefix	= flds.Add_str	("cl_sortkey_prefix", 230);
 		this.fld_collation_id	= flds.Add_byte	("cl_collation_id");
 		this.fld_type_id		= flds.Add_byte	("cl_type_id");
+		this.fld_cat_subcats		= flds.Add_byte	("cat_subcats");
+		this.fld_cat_pages		= flds.Add_byte	("cat_pages");
+		this.fld_cat_files		= flds.Add_byte	("cat_files");
 		conn.Rls_reg(this);
 		conn.Meta_tbl_remake(this);
 	}

@@ -17,7 +17,7 @@ package gplx.xowa.addons.wikis.ctgs.htmls.catpages.doms; import gplx.*; import g
 import gplx.dbs.*; import gplx.xowa.wikis.nss.*;
 public class Xoctg_catpage_itm {
 	private byte version;
-	Xoctg_catpage_itm(byte version, byte grp_tid, int page_id, byte[] sortkey_prefix, byte[] sortkey_binary) {
+	Xoctg_catpage_itm(byte version, byte grp_tid, int page_id, byte[] sortkey_prefix, byte[] sortkey_binary, int count_subcs, int count_pages, int count_files) {
 		this.version = version;
 		this.grp_tid = grp_tid;
 		this.page_id = page_id;
@@ -25,6 +25,9 @@ public class Xoctg_catpage_itm {
 		this.sortkey_prefix = sortkey_prefix;
 		this.sortkey_handle = sortkey_prefix;	// default handle to sortkey_prefix;
 		this.sortkey_binary = sortkey_binary;
+		this.count_subcs = count_subcs;
+		this.count_pages = count_pages;
+		this.count_files = count_files;
 	}
 	public byte					Grp_tid()			{return grp_tid;}			private final    byte grp_tid;		// v2-v4:cl_type_id; subc,page,file
 	public int					Page_id()			{return page_id;}			private final    int page_id;		// v2-v4:cl_from
@@ -32,6 +35,9 @@ public class Xoctg_catpage_itm {
 	public byte[]				Sortkey_handle()	{return sortkey_handle;}	private byte[] sortkey_handle;		// v2-v3:cl_sortkey; v4:cl_sortkey_prefix\nttl_txt; never "cl_sortkey" which is binary ICU value;
 	public byte[]				Sortkey_binary()	{return sortkey_binary;}	private byte[] sortkey_binary;		// v2-v4:cl_sortkey; note that v4 is binary icu value
 	public Xoa_ttl				Page_ttl()			{return page_ttl;}			private Xoa_ttl page_ttl;
+	public int				Count_subcs()			{return count_subcs;}			private int count_subcs;
+	public int				Count_pages()			{return count_pages;}			private int count_pages;
+	public int				Count_files()			{return count_files;}			private int count_files;
 
 	public void Page_ttl_(Xoa_ttl ttl) {
 		this.page_ttl = ttl;
@@ -79,18 +85,24 @@ public class Xoctg_catpage_itm {
 	public static Xoctg_catpage_itm New_by_rdr(Db_rdr rdr, byte version) {
 		byte[] sortkey_binary = Bry_.Empty;
 		byte[] sortkey_prefix = Bry_.Empty;
+		int count_subcs = 0;
+		int count_pages = 0;
+		int count_files = 0;
 		if (version == Version__4) {
 			sortkey_binary = rdr.Read_bry("cl_sortkey");
 			sortkey_prefix = rdr.Read_bry_by_str("cl_sortkey_prefix");
+			count_subcs = rdr.Read_int("cat_subcats");
+			count_pages = rdr.Read_int("cat_pages");
+			count_files = rdr.Read_int("cat_files");
 		}
 		else {
 			sortkey_binary = Bry_.Empty;
 			sortkey_prefix = rdr.Read_bry_by_str("cl_sortkey");
 		}
-		return new Xoctg_catpage_itm(version, rdr.Read_byte("cl_type_id"), rdr.Read_int("cl_from"), sortkey_prefix, sortkey_binary);
+		return new Xoctg_catpage_itm(version, rdr.Read_byte("cl_type_id"), rdr.Read_int("cl_from"), sortkey_prefix, sortkey_binary, count_subcs, count_pages, count_files);
 	}
 	public static Xoctg_catpage_itm New_by_ttl(byte grp_tid, int page_id, Xoa_ttl ttl) {	// TEST
-		Xoctg_catpage_itm rv = new Xoctg_catpage_itm(Version__4, grp_tid, page_id, ttl.Page_txt(), Bry_.Empty);
+		Xoctg_catpage_itm rv = new Xoctg_catpage_itm(Version__4, grp_tid, page_id, ttl.Page_txt(), Bry_.Empty, 0, 0, 0);
 		rv.Page_ttl_(ttl);
 		return rv;
 	}

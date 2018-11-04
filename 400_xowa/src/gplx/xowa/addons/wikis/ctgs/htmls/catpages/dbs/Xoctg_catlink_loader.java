@@ -41,13 +41,19 @@ class Xoctg_catlink_loader {
 		int len = db_mgr.Dbs__len();
 		for (int i = 0; i < len; ++i) {
 			Xow_db_file cl_db = db_mgr.Dbs__get_at(i);
+                        String key = "";
 			switch (cl_db.Tid()) {
 				case Xow_db_file_.Tid__cat_link:	// always use cat_link db
+					key = "link_db_" + ++db_idx;
 					break;
-				case Xow_db_file_.Tid__core:		// only use core if all or few
+				case Xow_db_file_.Tid__cat_core:
+					key = "cat_core";
+					break;
+				case Xow_db_file_.Tid__core:		// [NOT SURE WHERE THIS COMES IN]only use core if all or few
 					if (db_mgr.Props().Layout_text().Tid_is_lot()) 
 						continue;
 					else
+						key = "??????"; // [DONT KNOW]
 						break;
 				default:							// skip all other files
 					continue;
@@ -55,12 +61,12 @@ class Xoctg_catlink_loader {
 
 			// add to db_list
 			if (db_1st == null) db_1st = cl_db.Conn();
-			db_list.Add(new Db_attach_itm("link_db_" + ++db_idx, cl_db.Conn()));
+			db_list.Add(new Db_attach_itm(key, cl_db.Conn()));
 		}
 
 		// make attach_mgr
 		this.version = 4;
-		this.link_dbs_len = db_list.Len();
+		this.link_dbs_len = db_list.Len() - 1; // dont want to count cat_core
 		if (cat_core_conn.Meta_tbl_exists("cat_sort")) {
 			version = 3;
 			db_1st = cat_core_conn;
@@ -94,17 +100,39 @@ class Xoctg_catlink_loader {
 		sortkey_val = Build_sortkey_val(sortkey_val_bfr, version, catpage_mgr.Collation_mgr(), url_sortkey);
 
 		// bld sql; NOTE: building sql with args embedded b/c (a) UNION requires multiple Crt_arg for each ?; (EX: 4 unions, 3 ? require 12 .Crt_arg); (b) easier to debug
-		String sql = Db_sql_.Make_by_fmt(String_.Ary
-		( "SELECT  cl_to_id"
-		, ",       cl_from"
-		, ",       cl_type_id"
-		, ",       {3} AS cl_sortkey"
-		, ",       {7} AS cl_sortkey_prefix"
-		, "FROM    <link_db_{0}>cat_link cl{6}"
-		, "WHERE   cl_to_id = {1}"
-		, "AND     cl_type_id = {2}"
-		, "AND     {3} {4} {5}"
-		), link_db_id, cat_id, grp_tid, sortkey_col, url_is_from ? ">=" : "<", sortkey_val, sortkey_join, sortkey_prefix_fld);
+		String[] sqlstr;
+		if (grp_tid > 0) // [probably compare against a constant]
+			sqlstr = String_.Ary
+			( "SELECT  cl_to_id"
+			, ",       cl_from"
+			, ",       cl_type_id"
+			, ",       {3} AS cl_sortkey"
+			, ",       {7} AS cl_sortkey_prefix"
+			, ",       0 AS cat_subcats"
+			, ",       0 AS cat_pages"
+			, ",       0 AS cat_files"
+			, "FROM    <link_db_{0}>cat_link cl{6}"
+			, "WHERE   cl_to_id = {1}"
+			, "AND     cl_type_id = {2}"
+			, "AND     {3} {4} {5}"
+			);
+		else
+			sqlstr = String_.Ary
+			( "SELECT  cl_to_id"
+			, ",       cl_from"
+			, ",       cl_type_id"
+			, ",       {3} AS cl_sortkey"
+			, ",       {7} AS cl_sortkey_prefix"
+			, ",       cca.cat_subcats AS cat_subcats"
+			, ",       cca.cat_pages AS cat_pages"
+			, ",       cca.cat_files AS cat_files"
+			, "FROM    <link_db_{0}>cat_link cl{6}"
+			, "JOIN    <cat_core>cat_core cca ON cl.cl_from = cca.cat_id"
+			, "WHERE   cl_to_id = {1}"
+			, "AND     cl_type_id = {2}"
+			, "AND     {3} {4} {5}"
+			);
+		String sql = Db_sql_.Make_by_fmt(sqlstr, link_db_id, cat_id, grp_tid, sortkey_col, url_is_from ? ">=" : "<", sortkey_val, sortkey_join, sortkey_prefix_fld);
 		bfr.Add_str_u8(sql);
 	}
 	private void Load_catlinks(Xoctg_catpage_ctg rv, Xow_wiki wiki, Xowd_page_tbl page_tbl, Xoctg_catpage_grp grp, String sql, boolean url_is_from, int limit) {
@@ -132,6 +160,7 @@ class Xoctg_catlink_loader {
 				}
 			}
 		}
+		// potentially a catch block?
 		finally {
 			rdr.Rls();
 			attach_mgr.Detach();
