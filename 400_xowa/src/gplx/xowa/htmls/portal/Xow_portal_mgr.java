@@ -99,7 +99,9 @@ public class Xow_portal_mgr implements Gfo_invk {
 	}
 
 	public byte[] Div_personal_bry() {return div_personal_bry;} private byte[] div_personal_bry = Bry_.Empty;
-	public byte[] Div_ns_bry(Bry_bfr_mkr bfr_mkr, Xoa_ttl ttl, Xow_ns_mgr ns_mgr) {
+	public byte[] Div_ns_bry(Xowe_wiki wiki, Xoa_ttl ttl) {
+		Bry_bfr_mkr bfr_mkr = wiki.Utl__bfr_mkr();
+		Xow_ns_mgr ns_mgr = wiki.Ns_mgr();
 		Xow_ns ns = ttl.Ns();
 		byte[] subj_cls = Ns_cls_by_ord(ns_mgr, ns.Ord_subj_id()), talk_cls = Ns_cls_by_ord(ns_mgr, ns.Ord_talk_id());
 		if		(ns.Id_is_talk())
@@ -118,7 +120,17 @@ public class Xow_portal_mgr implements Gfo_invk {
 		byte[] subj_href = Xoh_html_wtr_escaper.Escape(Xop_amp_mgr.Instance, tmp_bfr, Bry_.Add(Xoh_href_.Bry__wiki, ttl.Subj_url()));
 		byte[] talk_href = Xoh_html_wtr_escaper.Escape(Xop_amp_mgr.Instance, tmp_bfr, Bry_.Add(Xoh_href_.Bry__wiki, ttl.Talk_url()));
 
-		div_ns_fmtr.Bld_bfr_many(tmp_bfr, subj_href, subj_cls, talk_href, talk_cls, vnt_menu);
+		// Adds namespace links
+		Xow_msg_mgr msg_mgr = wiki.Msg_mgr();
+		byte[] subjectId = ttl.Ns().Name_db();
+		if (subjectId.length == 0)
+			subjectId = Bry_.new_a7("main");
+		String subjectKey = "nstab-" + String_.new_u8(subjectId);
+		if (Bry_.Eq(ttl.Page_db(), wiki.Props().Siteinfo_mainpage()))
+			subjectKey = "mainpage-nstab";
+		byte[] portal_main = msg_mgr.Val_by_key_obj(subjectKey.toLowerCase());
+
+		div_ns_fmtr.Bld_bfr_many(tmp_bfr, subj_href, subj_cls, talk_href, talk_cls, vnt_menu, portal_main);
 		return tmp_bfr.To_bry_and_rls();
 	}
 	private byte[] Ns_cls_by_ord(Xow_ns_mgr ns_mgr, int ns_ord) {
@@ -167,7 +179,7 @@ public class Xow_portal_mgr implements Gfo_invk {
 	}
 	private final    Bry_fmtr 
 	  div_personal_fmtr = Bry_fmtr.new_("~{portal_personal_subj_href};~{portal_personal_subj_text};~{portal_personal_talk_cls};~{portal_personal_talk_href};~{portal_personal_talk_cls};", "portal_personal_subj_href", "portal_personal_subj_text", "portal_personal_subj_cls", "portal_personal_talk_href", "portal_personal_talk_cls")
-	, div_ns_fmtr = Bry_fmtr.new_("~{portal_ns_subj_href};~{portal_ns_subj_cls};~{portal_ns_talk_href};~{portal_ns_talk_cls};~{portal_div_vnts}", "portal_ns_subj_href", "portal_ns_subj_cls", "portal_ns_talk_href", "portal_ns_talk_cls", "portal_div_vnts")
+	, div_ns_fmtr = Bry_fmtr.new_("~{portal_ns_subj_href};~{portal_ns_subj_cls};~{portal_ns_talk_href};~{portal_ns_talk_cls};~{portal_div_vnts};~{portal_main}", "portal_ns_subj_href", "portal_ns_subj_cls", "portal_ns_talk_href", "portal_ns_talk_cls", "portal_div_vnts", "portal_main")
 	, div_view_fmtr = Bry_fmtr.new_("", "portal_view_read_cls", "portal_view_edit_cls", "portal_view_html_cls", "search_text", "portal_view_read_href", "portal_view_edit_href", "portal_view_html_href")
 	, div_logo_fmtr = Bry_fmtr.new_("", "portal_nav_main_href", "portal_logo_url")
 	, div_sync_fmtr = Bry_fmtr.new_("", "page_url")
