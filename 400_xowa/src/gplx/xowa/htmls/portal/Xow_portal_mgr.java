@@ -129,6 +129,9 @@ public class Xow_portal_mgr implements Gfo_invk {
 		if (Bry_.Eq(ttl.Page_db(), wiki.Props().Siteinfo_mainpage()))
 			subjectKey = "mainpage-nstab";
 		byte[] portal_main = msg_mgr.Val_by_key_obj(subjectKey.toLowerCase());
+		// if no mapping use the Namespace name
+		if (portal_main.length == 0)
+			portal_main = ttl.Ns().Name_db();
 
 		div_ns_fmtr.Bld_bfr_many(tmp_bfr, subj_href, subj_cls, talk_href, talk_cls, vnt_menu, portal_main);
 		return tmp_bfr.To_bry_and_rls();
