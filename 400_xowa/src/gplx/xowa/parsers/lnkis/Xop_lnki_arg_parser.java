@@ -113,6 +113,11 @@ public class Xop_lnki_arg_parser {
 			int dim = int_bfr.To_int_and_clear(-1);
 			if	(mode_width)	this.lnki_w = dim;
 			else				this.lnki_h = dim;
+			// check bounds
+			if (this.lnki_h == 0) {
+				if (this.lnki_w != 0)
+					this.lnki_h = this.lnki_w;
+			}
 			return Tid_dim;
 		}
 		return Tid_caption;
