@@ -103,6 +103,14 @@ public class Http_server_mgr implements Gfo_invk {
 			Xowe_wiki wiki = (Xowe_wiki)app.Wiki_mgr().Get_by_or_make_init_y(wiki_domain);			// assert init for Main_Page; EX:click zh.w on wiki sidebar; DATE:2015-07-19
 			if (Runtime_.Memory_total() > Io_mgr.Len_gb)	Xowe_wiki_.Rls_mem(wiki, true);			// release memory at 1 GB; DATE:2015-09-11
 
+			// check for dropdown search
+			if (Bry_.Has_at_bgn(ttl_bry, searcher, 0, ttl_bry.length)) {
+				byte[] search_term = Bry_.Mid(ttl_bry, 7);
+				Srch_htmlbar_mgr itm = app.Addon_mgr().Itms__search__htmlbar();
+				itm.Search(wiki, search_term, Bry_.new_a7("search_result"));
+				return itm.Get_js_rslt();
+			}
+
 			// get the url / ttl
 			if (Bry_.Len_eq_0(ttl_bry)) ttl_bry = wiki.Props().Main_page();
 			Xoa_url url = wiki.Utl__url_parser().Parse(ttl_bry);

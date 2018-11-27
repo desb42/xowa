@@ -55,31 +55,42 @@ class Http_url_parser {
 			this.wiki = url_obj.Segs()[0];
 
 			int segs_len = url_obj.Segs().length;
+			byte[] x = null;
+			int ofs = 1;
 			if (segs_len > 1) {
-				byte[] x =  url_obj.Segs()[2];
-				if (segs_len > 2) {
-					Bry_bfr bfr = Bry_bfr_.New();
-					for (int i = 2; i < segs_len; i++) {
-						if (i != 2) bfr.Add_byte_slash();
-						bfr.Add(url_obj.Segs()[i]);
-					}
-					x = bfr.To_bry_and_clear();
+				if (Bry_.Has_at_bgn(url_obj.Segs()[1], wikiname))
+					ofs = 2;
+				Bry_bfr bfr = Bry_bfr_.New();
+				for (int i = ofs; i < segs_len; i++) {
+					if (i != ofs) bfr.Add_byte_slash();
+					bfr.Add(url_obj.Segs()[i]);
 				}
-				this.page = x;
+				x = bfr.To_bry_and_clear();
 			}
+			this.page = x;
 
-			Gfo_qarg_mgr qarg_mgr = new Gfo_qarg_mgr().Init(url_obj.Qargs());
-			byte[] action_val = qarg_mgr.Read_bry_or("action", Bry_.Empty);
-			if      (Bry_.Eq(action_val, Xoa_url_.Qarg__action__read))
-				this.action = Xopg_page_.Tid_read;
-			else if (Bry_.Eq(action_val, Xoa_url_.Qarg__action__edit))
-				this.action = Xopg_page_.Tid_edit;
-			else if (Bry_.Eq(action_val, Xoa_url_.Qarg__action__html))
-				this.action = Xopg_page_.Tid_html;
-			else if (Bry_.Eq(action_val, Qarg__action__popup)) {
-				this.popup = true;
-				this.popup_id = qarg_mgr.Read_str_or_null(Bry_.new_a7("popup_id"));
-				this.popup_mode = qarg_mgr.Read_str_or_null(Bry_.new_a7("popup_mode"));
+			// Special: pages need to be passed through!
+			if (Bry_.Has_at_bgn(x, specialname)) {
+				// tack the querystring back on
+				Bry_bfr bfr = Bry_bfr_.New();
+				bfr.Add(x);
+				bfr.Add_mid(url, this.wiki.length+6+x.length+1, url.length); 
+				this.page = bfr.To_bry_and_clear();
+			}
+			else {
+				Gfo_qarg_mgr qarg_mgr = new Gfo_qarg_mgr().Init(url_obj.Qargs());
+				byte[] action_val = qarg_mgr.Read_bry_or("action", Bry_.Empty);
+				if      (Bry_.Eq(action_val, Xoa_url_.Qarg__action__read))
+					this.action = Xopg_page_.Tid_read;
+				else if (Bry_.Eq(action_val, Xoa_url_.Qarg__action__edit))
+					this.action = Xopg_page_.Tid_edit;
+				else if (Bry_.Eq(action_val, Xoa_url_.Qarg__action__html))
+					this.action = Xopg_page_.Tid_html;
+				else if (Bry_.Eq(action_val, Qarg__action__popup)) {
+					this.popup = true;
+					this.popup_id = qarg_mgr.Read_str_or_null(Bry_.new_a7("popup_id"));
+					this.popup_mode = qarg_mgr.Read_str_or_null(Bry_.new_a7("popup_mode"));
+				}
 			}
 
 			/*
@@ -140,5 +151,7 @@ class Http_url_parser {
 	private static final    byte[]
 	  Qarg__action__frag = Bry_.Add(Byte_ascii.Question_bry, Xoa_url_.Qarg__action, Byte_ascii.Eq_bry) // "?action="
 	, Qarg__action__popup = Bry_.new_a7("popup")
+	, wikiname = Bry_.new_a7("wiki")
+	, specialname = Bry_.new_a7("Special:")
 	;
 }
