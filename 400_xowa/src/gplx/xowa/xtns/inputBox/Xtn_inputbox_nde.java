@@ -13,7 +13,7 @@ The terms of each license can be found in the source code repository:
 GPLv3 License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-GPLv3.txt
 Apache License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-APACHE2.txt
 */
-package gplx.xowa.xtns.inputBox; import gplx.*; import gplx.xowa.*; import gplx.xowa.xtns.*;
+package gplx.xowa.xtns.inputbox; import gplx.*; import gplx.xowa.*; import gplx.xowa.xtns.*;
 import gplx.core.brys.*;
 import gplx.xowa.htmls.*; import gplx.xowa.htmls.core.htmls.*;
 import gplx.xowa.parsers.*; import gplx.xowa.parsers.xndes.*;
@@ -31,6 +31,14 @@ public class Xtn_inputbox_nde implements Xox_xnde {
 		render(bfr, src);
 		}
 
+	private void Lowercase(byte[] src, int src_bgn, int src_end) {
+		for (int i = src_bgn; i < src_end; i++) {
+			byte b = src[i];
+			if (b > 64 && b < 91)
+				src[i] += 32;	// lowercase
+		}
+	}
+
 	private void Parse_lines(byte[] src, int src_bgn, int src_end) {
 		mFound = mBgcolor_bgn = mBgcolor_end = mBreak_bgn = mBreak_end = mButtonlabel_bgn = mButtonlabel_end = mDefault_bgn = mDefault_end = mDir_bgn = mDir_end = mEditintro_bgn = mEditintro_end = mFulltextbutton_bgn = mFulltextbutton_end = mHidden_bgn = mHidden_end = mId_bgn = mId_end = mInline_bgn = mInline_end = mLabeltext_bgn = mLabeltext_end = mMinor_bgn = mMinor_end = mNamespaces_bgn = mNamespaces_end = mNosummary_bgn = mNosummary_end = mPage_bgn = mPage_end = mPlaceholder_bgn = mPlaceholder_end = mPrefix_bgn = mPrefix_end = mPreload_bgn = mPreload_end = mSearchbuttonlabel_bgn = mSearchbuttonlabel_end = mSearchfilter_bgn = mSearchfilter_end = mSummary_bgn = mSummary_end = mTour_bgn = mTour_end = mType_bgn = mType_end = mUseve_bgn = mUseve_end = mWidth_bgn = mWidth_end = -1;
 		int line_bgn = src_bgn; boolean line_is_1st = true;
@@ -40,117 +48,129 @@ public class Xtn_inputbox_nde implements Xox_xnde {
 			int eq_pos = Bry_find_.Find_fwd(src, Byte_ascii.Eq, line_bgn, line_end);
 			if (eq_pos != Bry_find_.Not_found) {
 				mFound++;
-				if (Bry_.Has_at_bgn(src, inputbox_bgcolor, line_bgn, line_end)) {
-					mBgcolor_bgn = eq_pos+1;
-					mBgcolor_end = line_end;
+				// skip any leading whitespace
+				int term_bgn = Bry_find_.Find_fwd_while_space_or_tab(src, line_bgn, line_end);
+				int term_end = Bry_find_.Trim_bwd_space_tab(src, eq_pos, term_bgn);
+				Lowercase(src, term_bgn, term_end);
+				// move past '=' and skip whitespace
+				eq_pos = Bry_find_.Find_fwd_while_space_or_tab(src, eq_pos+1, line_end);
+				// trim trailing whitespace
+				int val_end = Bry_find_.Trim_bwd_space_tab(src, line_end, eq_pos);
+				if (Bry_.Has_at_bgn(src, inputbox_bgcolor, term_bgn, line_end)) {
+					mBgcolor_bgn = eq_pos;
+					mBgcolor_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_break, line_bgn, line_end)) {
-					mBreak_bgn = eq_pos+1;
-					mBreak_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_break, term_bgn, line_end)) {
+					mBreak_bgn = eq_pos;
+					mBreak_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_buttonlabel, line_bgn, line_end)) {
-					mButtonlabel_bgn = eq_pos+1;
-					mButtonlabel_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_buttonlabel, term_bgn, line_end)) {
+					mButtonlabel_bgn = eq_pos;
+					mButtonlabel_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_default, line_bgn, line_end)) {
-					mDefault_bgn = eq_pos+1;
-					mDefault_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_default, term_bgn, line_end)) {
+					mDefault_bgn = eq_pos;
+					mDefault_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_dir, line_bgn, line_end)) {
-					mDir_bgn = eq_pos+1;
-					mDir_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_dir, term_bgn, line_end)) {
+					mDir_bgn = eq_pos;
+					mDir_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_editintro, line_bgn, line_end)) {
-					mEditintro_bgn = eq_pos+1;
-					mEditintro_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_editintro, term_bgn, line_end)) {
+					mEditintro_bgn = eq_pos;
+					mEditintro_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_fulltextbutton, line_bgn, line_end)) {
-					mFulltextbutton_bgn = eq_pos+1;
-					mFulltextbutton_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_fulltextbutton, term_bgn, line_end)) {
+					mFulltextbutton_bgn = eq_pos;
+					mFulltextbutton_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_hidden, line_bgn, line_end)) {
-					mHidden_bgn = eq_pos+1;
-					mHidden_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_hidden, term_bgn, line_end)) {
+					mHidden_bgn = eq_pos;
+					mHidden_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_id, line_bgn, line_end)) {
-					mId_bgn = eq_pos+1;
-					mId_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_id, term_bgn, line_end)) {
+					mId_bgn = eq_pos;
+					mId_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_inline, line_bgn, line_end)) {
-					mInline_bgn = eq_pos+1;
-					mInline_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_inline, term_bgn, line_end)) {
+					mInline_bgn = eq_pos;
+					mInline_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_labeltext, line_bgn, line_end)) {
-					mLabeltext_bgn = eq_pos+1;
-					mLabeltext_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_labeltext, term_bgn, line_end)) {
+					mLabeltext_bgn = eq_pos;
+					mLabeltext_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_minor, line_bgn, line_end)) {
-					mMinor_bgn = eq_pos+1;
-					mMinor_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_minor, term_bgn, line_end)) {
+					mMinor_bgn = eq_pos;
+					mMinor_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_namespaces, line_bgn, line_end)) {
-					mNamespaces_bgn = eq_pos+1;
-					mNamespaces_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_namespaces, term_bgn, line_end)) {
+					mNamespaces_bgn = eq_pos;
+					mNamespaces_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_nosummary, line_bgn, line_end)) {
-					mNosummary_bgn = eq_pos+1;
-					mNosummary_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_nosummary, term_bgn, line_end)) {
+					mNosummary_bgn = eq_pos;
+					mNosummary_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_page, line_bgn, line_end)) {
-					mPage_bgn = eq_pos+1;
-					mPage_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_page, term_bgn, line_end)) {
+					mPage_bgn = eq_pos;
+					mPage_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_placeholder, line_bgn, line_end)) {
-					mPlaceholder_bgn = eq_pos+1;
-					mPlaceholder_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_placeholder, term_bgn, line_end)) {
+					mPlaceholder_bgn = eq_pos;
+					mPlaceholder_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_prefix, line_bgn, line_end)) {
-					mPrefix_bgn = eq_pos+1;
-					mPrefix_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_prefix, term_bgn, line_end)) {
+					mPrefix_bgn = eq_pos;
+					mPrefix_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_preload, line_bgn, line_end)) {
-					mPreload_bgn = eq_pos+1;
-					mPreload_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_preload, term_bgn, line_end)) {
+					mPreload_bgn = eq_pos;
+					mPreload_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_searchbuttonlabel, line_bgn, line_end)) {
-					mSearchbuttonlabel_bgn = eq_pos+1;
-					mSearchbuttonlabel_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_searchbuttonlabel, term_bgn, line_end)) {
+					mSearchbuttonlabel_bgn = eq_pos;
+					mSearchbuttonlabel_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_searchfilter, line_bgn, line_end)) {
-					mSearchfilter_bgn = eq_pos+1;
-					mSearchfilter_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_searchfilter, term_bgn, line_end)) {
+					mSearchfilter_bgn = eq_pos;
+					mSearchfilter_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_summary, line_bgn, line_end)) {
-					mSummary_bgn = eq_pos+1;
-					mSummary_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_summary, term_bgn, line_end)) {
+					mSummary_bgn = eq_pos;
+					mSummary_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_tour, line_bgn, line_end)) {
-					mTour_bgn = eq_pos+1;
-					mTour_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_tour, term_bgn, line_end)) {
+					mTour_bgn = eq_pos;
+					mTour_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_type, line_bgn, line_end)) {
-					mType_bgn = eq_pos+1;
-					mType_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_type, term_bgn, line_end)) {
+					mType_bgn = eq_pos;
+					mType_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_useve, line_bgn, line_end)) {
-					mUseve_bgn = eq_pos+1;
-					mUseve_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_useve, term_bgn, line_end)) {
+					mUseve_bgn = eq_pos;
+					mUseve_end = val_end;
 				}
-				else if (Bry_.Has_at_bgn(src, inputbox_width, line_bgn, line_end)) {
-					mWidth_bgn = eq_pos+1;
-					mWidth_end = line_end;
+				else if (Bry_.Has_at_bgn(src, inputbox_width, term_bgn, line_end)) {
+					mWidth_bgn = eq_pos;
+					mWidth_end = val_end;
 				}
 			}
-			line_bgn = line_end + 1;																			// +1 to skip over end "\n"
+			line_bgn = line_end + 1;														// +1 to skip over end "\n"
 		}
 	}
 
 	private void render(Bry_bfr bfr, byte[] src) {
 		if (mType_bgn != -1) {
-			if (Bry_.Has_at_bgn(src, type_create, mType_bgn, mType_end) ||
-					Bry_.Has_at_bgn(src, type_comment, mType_bgn, mType_end)) {
+			if (Bry_.Has_at_bgn(src, type_create, mType_bgn, mType_end)) {
 				//$this->mParser->getOutput()->addModules( 'ext.inputBox' );
-				getCreateForm(bfr, src);
+				getCreateForm(bfr, src, 0);
+				return;
+			}
+			if (Bry_.Has_at_bgn(src, type_comment, mType_bgn, mType_end)) {
+				//$this->mParser->getOutput()->addModules( 'ext.inputBox' );
+				getCreateForm(bfr, src, 1);
 				return;
 			}
 			else if (Bry_.Has_at_bgn(src, type_move, mType_bgn, mType_end)) {
@@ -182,19 +202,176 @@ public class Xtn_inputbox_nde implements Xox_xnde {
 		bfr.Add(Div_err_end);
 	}
 
-	private void getCreateForm(Bry_bfr bfr, byte[] src) {
+	private void getCreateForm(Bry_bfr bfr, byte[] src, int ftype) {
+/*
+		$htmlOut = Xml::openElement( 'div',
+			[
+				'class' => 'mw-inputbox-centered',
+				'style' => $this->bgColorStyle(),
+			]
+		);
+		
+		<div class="mw-inputbox-centered" style="background-color: inherit;">
+		<form name="createbox" class="createbox" action="/w/index.php" method="get">
+		<input type="hidden" value="edit" name="action" />
+		<input type="hidden" value="Template:Taxonomy/preload" name="preload" />
+		<input type="text" name="title" class="mw-ui-input mw-ui-input-inline createboxInput" value="Template:Taxonomy/" placeholder="" size="20" dir="ltr" />
+		 <input type="submit" name="create" class="mw-ui-button mw-ui-progressive createboxButton" value="Add" />
+		</form>
+		</div>
+*/
+		bfr.Add(Div_bgn);
+		if (mBgcolor_bgn != -1)
+			bfr.Add_mid(src, mBgcolor_bgn, mBgcolor_end);
+		else
+			bfr.Add(transparent);
+/*
+		$createBoxParams = [
+			'name' => 'createbox',
+			'class' => 'createbox',
+			'action' => $wgScript,
+			'method' => 'get'
+		];
+		if ( $this->mID !== '' ) {
+			$createBoxParams['id'] = Sanitizer::escapeIdForAttribute( $this->mID );
+		}
+		$htmlOut .= Xml::openElement( 'form', $createBoxParams );
+		$editArgs = $this->getEditActionArgs();
+		$htmlOut .= Html::hidden( $editArgs['name'], $editArgs['value'] );
+*/
+		bfr.Add(Form_create_bgn);
+/*
+		if ( $this->mPreload !== null ) {
+			$htmlOut .= Html::hidden( 'preload', $this->mPreload );
+		}
+*/
+		if ( mPreload_bgn != -1 )
+			hidden( bfr, inputbox_preload, src, mPreload_bgn, mPreload_end );
+/*
+		if ( is_array( $this->mPreloadparams ) ) {
+			foreach ( $this->mPreloadparams as $preloadparams ) {
+				$htmlOut .= Html::hidden( 'preloadparams[]', $preloadparams );
+			}
+		}
+		IGNORING
+*/
+/*
+		if ( $this->mEditIntro !== null ) {
+			$htmlOut .= Html::hidden( 'editintro', $this->mEditIntro );
+		}
+*/
+		if ( mEditintro_bgn != -1 )
+			hidden( bfr, inputbox_editintro, src, mEditintro_bgn, mEditintro_end );
+/*
+		if ( $this->mSummary !== null ) {
+			$htmlOut .= Html::hidden( 'summary', $this->mSummary );
+		}
+*/
+		if ( mSummary_bgn != -1 )
+			hidden( bfr, inputbox_summary, src, mSummary_bgn, mSummary_end );
+/*
+		if ( $this->mNosummary !== null ) {
+			$htmlOut .= Html::hidden( 'nosummary', $this->mNosummary );
+		}
+*/
+		if ( mNosummary_bgn != -1 )
+			hidden( bfr, inputbox_nosummary, src, mNosummary_bgn, mNosummary_end );
+/*
+		if ( $this->mPrefix !== '' ) {
+			$htmlOut .= Html::hidden( 'prefix', $this->mPrefix );
+		}
+*/
+		if ( mPrefix_bgn != -1 )
+			hidden( bfr, inputbox_prefix, src, mPrefix_bgn, mPrefix_end );
+/*
+		if ( $this->mMinor !== null ) {
+			$htmlOut .= Html::hidden( 'minor', $this->mMinor );
+		}
+*/
+		if ( mMinor_bgn != -1 )
+			hidden( bfr, inputbox_minor, src, mMinor_bgn, mMinor_end );
+/*
+		if ( $this->mType == 'comment' ) {
+			$htmlOut .= Html::hidden( 'section', 'new' );
+		}
+*/
+		if ( ftype == 1 )  // comment
+			bfr.Add(Hidden_create);
+/*
+		$htmlOut .= Xml::openElement( 'input',
+			[
+				'type' => $this->mHidden ? 'hidden' : 'text',
+				'name' => 'title',
+				'class' => $this->getLinebreakClasses() .
+					'mw-ui-input mw-ui-input-inline createboxInput',
+				'value' => $this->mDefaultText,
+				'placeholder' => $this->mPlaceholderText,
+				'size' => $this->mWidth,
+				'dir' => $this->mDir,
+			]
+		);
+*/
+		bfr.Add(Inp_create);	// "<input type=\""
+		if (mHidden_bgn != -1)
+			bfr.Add(Inp_hidden);
+		else
+			bfr.Add(Inp_text);
+		bfr.Add(Inp_create_tween1);		// "\" name=\"title\" class=\""
+		getLinebreakClasses(bfr);
+		bfr.Add(Inp_create_tween2);		// "mw-ui-input mw-ui-input-inline createboxInput\" value=\""
+		if (mDefault_bgn != -1)
+			bfr.Add_mid(src, mDefault_bgn, mDefault_end);
+		bfr.Add(Inp_tween2); // "\" placeholder=\""
+		if (mPlaceholder_bgn != -1)
+			bfr.Add_mid(src, mPlaceholder_bgn, mPlaceholder_end);
+		bfr.Add(Inp_tween3); // "\" size=\""
+		if (mWidth_bgn != -1)
+			bfr.Add_mid(src, mWidth_bgn, mWidth_end);
+		bfr.Add(Inp_tween4); // "\" dir=\""
+		if (mDir_bgn != -1)
+			bfr.Add_mid(src, mDir_bgn, mDir_end);
+		else
+			bfr.Add(dir_ltr);
+		bfr.Add(Inp_end); // "\" />"
+
+//??		$htmlOut .= $this->mBR;
+
+/*
+		$htmlOut .= Xml::openElement( 'input',
+			[
+				'type' => 'submit',
+				'name' => 'create',
+				'class' => 'mw-ui-button mw-ui-progressive createboxButton',
+				'value' => $this->mButtonLabel
+			]
+		);
+*/
+		bfr.Add(Inp_create2);	// "<input type=\"submit\" name=\"create\" class=\"mw-ui-button mw-ui-progressive createboxButton\" value=\""
+		if ( mButtonlabel_bgn != -1 )
+			bfr.Add_mid(src, mButtonlabel_bgn, mButtonlabel_end);
+		else if ( ftype == 1 )  // comment
+			bfr.Add(inputbox_postcomment);
+		else
+			bfr.Add(inputbox_createarticle);
+		bfr.Add(Inp_end); // "\" />"
+/*
+		$htmlOut .= Xml::closeElement( 'form' );
+		$htmlOut .= Xml::closeElement( 'div' );
+*/
+		bfr.Add(Form_close);
 	}
 	private void getMoveForm(Bry_bfr bfr, byte[] src) {
 	}
 	private void getCommentForm(Bry_bfr bfr, byte[] src) {
 	}
 	private void getSearchForm(Bry_bfr bfr, byte[] src, int ftype) {
+		// Build HTML
 		bfr.Add_bry_many(Div_bgn);
 		if (mBgcolor_bgn != -1)
 			bfr.Add_mid(src, mBgcolor_bgn, mBgcolor_end);
 		else
 			bfr.Add(transparent);
-		bfr.Add(Form_bgn);
+		bfr.Add(Form_search_bgn);
 		bfr.Add_bry_many(Inp_bgn); //"<input class=\""
 		getLinebreakClasses(bfr);
 		bfr.Add(Inp_classes); // "searchboxInput mw-ui-input mw-ui-input-inline\" name=\"search\" type=\""
@@ -281,6 +458,10 @@ public class Xtn_inputbox_nde implements Xox_xnde {
 	, Inp_tween3 = Bry_.new_a7("\" size=\"")
 	, Inp_tween4 = Bry_.new_a7("\" dir=\"")
 	, Inp_end = Bry_.new_a7("\" />")
+	, Inp_create = Bry_.new_a7("<input type=\"")
+	, Inp_create_tween1 = Bry_.new_a7("\" name=\"title\" class=\"")
+	, Inp_create_tween2 = Bry_.new_a7("mw-ui-input mw-ui-input-inline createboxInput\" value=\"")
+	, Inp_create2 = Bry_.new_a7("<input type=\"submit\" name=\"create\" class=\"mw-ui-button mw-ui-progressive createboxButton\" value=\"")
 	, dir_ltr = Bry_.new_a7("ltr")
 	, Hid_bgn = Bry_.new_a7("<input type=\"hidden\" name=\"")
 	, Hid_tween = Bry_.new_a7("\" value=\"")
@@ -289,16 +470,6 @@ public class Xtn_inputbox_nde implements Xox_xnde {
 	, Search_bgn = Bry_.new_a7("<input type=\"submit\" name=\"fulltext\" class=\"mw-ui-button\" value=\"")
 	, Search = Bry_.new_a7("Search")
 	, Fulltext = Bry_.new_a7("fulltext")
-	, inputbox_desc = Bry_.new_a7("Allow inclusion of predefined HTML forms")
-	, inputbox_error_no_type = Bry_.new_a7("You have not specified the type of input box to create.")
-	, inputbox_error_bad_type = Bry_.new_a7("Input box type \"$1\" not recognized.\nPlease specify \"create\", \"comment\", \"search\", \"search2\" or \"fulltext\".")
-	, inputbox_tryexact = Bry_.new_a7("Try exact match")
-	, inputbox_searchfulltext = Bry_.new_a7("Search full text")
-	, inputbox_createarticle = Bry_.new_a7("Create page")
-	, inputbox_movearticle = Bry_.new_a7("Move page")
-	, inputbox_postcomment = Bry_.new_a7("New section")
-	, inputbox_postcommenttitle = Bry_.new_a7("New section")
-	, inputbox_ns_main = Bry_.new_a7("Main")
 	, inputbox_bgcolor = Bry_.new_a7("bgcolor")
 	, inputbox_break = Bry_.new_a7("break")
 	, inputbox_buttonlabel = Bry_.new_a7("buttonlabel")
@@ -332,16 +503,22 @@ public class Xtn_inputbox_nde implements Xox_xnde {
 	, type_search2 = Bry_.new_a7("search2")
 	, type_fulltext = Bry_.new_a7("fulltext")
 	, Div_bgn = Bry_.new_a7("<div class=\"mw-inputbox-centered\" style=\"background-color: ")
-        , Form_bgn = Bry_.new_a7("\">\n<form name=\"searchbox\" class=\"searchbox\" action=\"/wiki/Special:Search\">")
-        , Form_close = Bry_.new_a7("</form>\n</div>\n")
+	, Form_search_bgn = Bry_.new_a7("\">\n<form name=\"searchbox\" class=\"searchbox\" action=\"/wiki/Special:Search\">")
+	, Form_close = Bry_.new_a7("</form>\n</div>\n")
+	, Form_create_bgn = Bry_.new_a7("\">\n<form name=\"createbox\" class=\"createbox\" action=\"/wiki/Special:Create\" method=\"get\">\n<input type=\"hidden\" value=\"edit\" name=\"action\" />")
+	, Hidden_create = Bry_.new_a7("<input type=\"hidden\" name=\"section\" value=\"new\">")
 	, transparent = Bry_.new_a7("transparent")
+	// language sensitive
+	, inputbox_desc = Bry_.new_a7("Allow inclusion of predefined HTML forms")
+	, inputbox_error_no_type = Bry_.new_a7("You have not specified the type of input box to create.")
+	, inputbox_error_bad_type = Bry_.new_a7("Input box type \"$1\" not recognized.\nPlease specify \"create\", \"comment\", \"search\", \"search2\" or \"fulltext\".")
+	, inputbox_tryexact = Bry_.new_a7("Try exact match")
+	, inputbox_searchfulltext = Bry_.new_a7("Search full text")
+	, inputbox_createarticle = Bry_.new_a7("Create page")
+	, inputbox_movearticle = Bry_.new_a7("Move page")
+	, inputbox_postcomment = Bry_.new_a7("New section")
+	, inputbox_postcommenttitle = Bry_.new_a7("New section")
+	, inputbox_ns_main = Bry_.new_a7("Main")
+	//
 	;
-	private static final    Bry_fmt fmt = Bry_fmt.Auto_nl_skip_last
-	( "<div class=\"mw-inputbox-centered\" style=\"background-color: ~{bgcolor}\">"
-	, "  <form name=\"searchbox\" class=\"searchbox\" action=\"/wiki/Special:Search\">"
-	, "    <input class=\"~{xtra}searchboxInput mw-ui-input mw-ui-input-inline\" name=\"search\" type=\"~{mhidden}\" value=\"~{mDefaultText}\" placeholder=\"~{mPlaceholderText}\" size=\"~{mWidth}\" dir=\"~{mDir}\" />"
-	, "  </form>"
-	, "</div>"
-	, ""
-	);
 }
