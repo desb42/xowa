@@ -56,11 +56,22 @@ public class Wbase_entity_accessor {
 		if (statements == null)
 			return null;
 		int statements_len = statements.Len();
+		// BEST, scan for preferred, then add normal (no deprecated)
+		if (selected_rank == ID_BEST) {
+			for (int i = 0; i < statements_len; i++) {
+				Wbase_claim_base statement = statements.Get_at(0);
+				if (statement.Rank_tid() == Wbase_claim_rank_.Tid__preferred)
+					rv.Add(statement);
+			}
+			for (int i = 0; i < statements_len; i++) {
+				Wbase_claim_base statement = statements.Get_at(0);
+				if (statement.Rank_tid() == Wbase_claim_rank_.Tid__normal)
+					rv.Add(statement);
+			}
+		}
+		else { // ALL
 		for (int i = 0; i < statements_len; i++) {
 			Wbase_claim_base statement = statements.Get_at(0);
-			if (	selected_rank == ID_ALL 
-				||	(selected_rank == ID_BEST && statement.Rank_tid() == Wbase_claim_rank_.Tid__preferred)
-				) {
 				rv.Add(statement);
 			}
 		}
