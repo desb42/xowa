@@ -17,6 +17,7 @@ package gplx.xowa.xtns.pfuncs.ttls; import gplx.*; import gplx.xowa.*; import gp
 import gplx.xowa.wikis.xwikis.*;
 import gplx.xowa.htmls.hrefs.*;
 import gplx.xowa.parsers.*; import gplx.xowa.parsers.tmpls.*;
+import gplx.xowa.wikis.domains.Xow_domain_tid_;
 public class Pfunc_urlfunc extends Pf_func_base {	// EX: {{lc:A}} -> a
 	@Override public boolean Func_require_colon_arg() {return true;}
 	@Override public void Func_evaluate(Bry_bfr bfr, Xop_ctx ctx, Xot_invk caller, Xot_invk self, byte[] src) {
@@ -35,9 +36,12 @@ public class Pfunc_urlfunc extends Pf_func_base {	// EX: {{lc:A}} -> a
 				trg.Add(Xoh_href_.Bry__https);									//	"https://"
 			else
 				trg.Add(gplx.core.net.Gfo_protocol_itm.Bry_relative);			//	"//"
-			trg.Add(xwiki.Domain_bry())											//  "commons.wikimedia.org"
-				.Add(Xoh_href_.Bry__wiki)										//	"/wiki/"
-				.Add_mid(ttl_ary, xwiki.Key_bry().length + 1, ttl_ary.length);	//	"A#b?c=d"; +1 for colon after "commons:"; NOTE: ugly way of getting rest of url, but ttl currently does not have Full_wo_wiki
+			trg.Add(xwiki.Domain_bry());											//  "commons.wikimedia.org"
+			if (xwiki.Domain_tid() != Xow_domain_tid_.Tid__other)											// only add if not other
+				trg.Add(Xoh_href_.Bry__wiki);										//	"/wiki/"
+			else
+				trg.Add_byte(Byte_ascii.Slash);
+			trg.Add_mid(ttl_ary, xwiki.Key_bry().length + 1, ttl_ary.length);	//	"A#b?c=d"; +1 for colon after "commons:"; NOTE: ugly way of getting rest of url, but ttl currently does not have Full_wo_wiki
 		}
 		else {
 			Bry_bfr tmp_bfr = ctx.Wiki().Utl__bfr_mkr().Get_b512();
