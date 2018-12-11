@@ -104,7 +104,13 @@ public class Http_server_mgr implements Gfo_invk {
 			if (Runtime_.Memory_total() > Io_mgr.Len_gb)	Xowe_wiki_.Rls_mem(wiki, true);			// release memory at 1 GB; DATE:2015-09-11
 
 			// get the url / ttl
-			if (Bry_.Len_eq_0(ttl_bry)) ttl_bry = wiki.Props().Main_page();
+			if (Bry_.Len_eq_0(ttl_bry))
+				ttl_bry = wiki.Props().Main_page();
+			else {
+				Bry_bfr tmp_bfr = wiki.Utl__bfr_mkr().Get_m001();
+				tmp_bfr.Add(wiki.Domain_bry()).Add(Bry_.new_a7("/wiki/")).Add(ttl_bry);
+				ttl_bry = tmp_bfr.To_bry_and_clear_and_rls();
+			}
 			Xoa_url url = wiki.Utl__url_parser().Parse(ttl_bry);
 			Xoa_ttl ttl = Xoa_ttl.Parse(wiki, url.To_bry_page_w_anch()); // changed from ttl_bry to page_w_anch; DATE:2017-07-24
 
