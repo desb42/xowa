@@ -60,7 +60,12 @@ public class Xoa_css_img_downloader {
 					usr_dlg.Warn_many(GRP_KEY, "parse.invalid_url.end_missing", "could not find end_sequence for 'url(': bgn='~{0}' end='~{1}'", prv_pos, String_.new_u8__by_len(src, prv_pos, prv_pos + 25));
 					bfr.Add_mid(src, prv_pos, src_len);
 					break;
-				}	
+				}
+				// trim excess space from top and tail
+				while (src[bgn_pos] == Byte_ascii.Space)
+					bgn_pos++;
+				while (src[end_pos] == Byte_ascii.Space)
+					end_pos--;
 				if (end_pos - bgn_pos == 0) {		// empty; "url()"; ignore
 					usr_dlg.Warn_many(GRP_KEY, "parse.invalid_url.empty", "'url(' is empty: bgn='~{0}' end='~{1}'", prv_pos, String_.new_u8__by_len(src, prv_pos, prv_pos + 25));
 					bfr.Add_mid(src, prv_pos, bgn_pos);
