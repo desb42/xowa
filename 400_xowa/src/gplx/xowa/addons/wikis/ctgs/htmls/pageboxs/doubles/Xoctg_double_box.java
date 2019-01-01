@@ -37,6 +37,9 @@ public class Xoctg_double_box implements Bfr_arg {
 			Xoctg_double_grp list = itm.Hidden() ? grp_hidden : grp_normal; 
 			list.Itms().Itms__add(itm);
 		}
+		grp_normal.Set_count();
+		grp_hidden.Set_count();
+
 		this.Bfr_arg__add(bfr);
 	}
 	public void Bfr_arg__add(Bry_bfr bfr) {

@@ -28,6 +28,7 @@ public class Xoctg_double_itm implements gplx.core.brys.Bfr_arg {
 	}
 	public void Itms__clear() 						{itms.Clear();}
 	public void Itms__add(Xoctg_pagebox_itm page) 	{itms.Add(page);}	
+	public int Count()		{return itms.Count();}
 	public void Bfr_arg__add(Bry_bfr bfr) {
 		int len = itms.Count();
 		for (int i = 0; i < len; ++i) {
