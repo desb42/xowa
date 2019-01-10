@@ -31,7 +31,7 @@ public class Xoh_file_fmtr__basic implements Xoh_file_fmtr {
 
 	@gplx.Virtual public void Add_full_img(Bry_bfr bfr, Xoh_wtr_ctx hctx, Xoae_page page, byte[] src, Xof_file_itm xfer_itm, int uid
 	, byte[] a_href, boolean a_href_is_file, byte a_cls, byte a_rel, byte[] a_title, byte[] a_xowa_title
-	, int img_w, int img_h, byte[] img_src, byte[] img_alt, byte img_cls, byte[] img_cls_other
+	, int img_w, int img_h, byte[] img_src, byte[] img_alt, byte img_cls, byte[] img_cls_other, byte[] img_style
 	) {
 		// init atrs
 		img_atrs.Init(uid, img_src, img_w, img_h);
@@ -40,25 +40,25 @@ public class Xoh_file_fmtr__basic implements Xoh_file_fmtr {
 		// fmt
 		if (Bry_.Len_eq_0(a_href))	// empty link should not create anchor; EX:[[File:A.png|link=|abc]]; PAGE:en.w:List_of_counties_in_New_York; DATE:2016-01-10
 			fmtr_full_img__anch_n.Bld_many(bfr
-			, uid, img_alt, img_atrs, img_cls_atr);
+			, uid, img_alt, img_atrs, img_cls_atr, img_style);
 		else
 			fmtr_full_img__anch_y.Bld_many(bfr
 			, a_href, Xoh_lnki_consts.A_cls_to_bry(a_cls), Xoh_lnki_consts.A_rel_to_bry(a_rel), a_title, a_xowa_title
-			, uid, img_alt, img_atrs, img_cls_atr);
+			, uid, img_alt, img_atrs, img_cls_atr, img_style);
 	}
 	private final    Bry_fmt fmtr_full_img__anch_y = Bry_fmt.Auto
 	( "<a href=\"~{a_href}\"~{a_class}~{a_rel}~{a_title} xowa_title=\"~{a_xowa_title}\">"
-	+ "<img id=\"xoimg_~{uid}\" alt=\"~{img_alt}\"~{img_core}~{img_class} /></a>"
+	+ "<img id=\"xoimg_~{uid}\" alt=\"~{img_alt}\"~{img_core}~{img_class}~{img_style} /></a>"
 	);
 	private final    Bry_fmt fmtr_full_img__anch_n = Bry_fmt.Auto
-	( "<img id=\"xoimg_~{uid}\" alt=\"~{img_alt}\"~{img_core}~{img_class} />");
+	( "<img id=\"xoimg_~{uid}\" alt=\"~{img_alt}\"~{img_core}~{img_class}~{img_style} />");
 
 	public byte[] Bld_thumb_part_img(Xoh_wtr_ctx hctx, Xoae_page page, byte[] src, Xof_file_itm xfer_itm, int uid, byte[] lnki_ttl, byte[] a_href, byte[] img_src, byte[] img_alt) {
 		byte[] a_title_atr = Gfh_atr_.Make(tmp_bfr, Gfh_atr_.Bry__title, xfer_itm.Lnki_ttl());
 		Add_full_img(tmp_bfr, hctx, page, src, xfer_itm, uid, a_href, Bool_.N, Xoh_lnki_consts.Tid_a_cls_image
 			, Xoh_lnki_consts.Tid_a_rel_none, a_title_atr
 			, Xoh_file_fmtr__basic.Escape_xowa_title(lnki_ttl)	// NOTE: must use lnki_ttl, not xfer_itm.Lnki_ttl(); 1st observes case-sensitivity; EX:"a.ogv"; PAGE:de.d:fappieren DATE:2016-06-23
-			, xfer_itm.Html_w(), xfer_itm.Html_h(), img_src, img_alt, Xoh_img_cls_.Tid__none, null);
+			, xfer_itm.Html_w(), xfer_itm.Html_h(), img_src, img_alt, Xoh_img_cls_.Tid__none, null, Bry_.Empty);
 		return tmp_bfr.To_bry_and_clear();
 	}
 	public void Add_thumb_core(Bry_bfr bfr, boolean mode_is_hdump, byte[] div1_halign, int div2_id, int div2_width, byte[] div2_content) {

@@ -181,7 +181,7 @@ public class Xoh_file_wtr__basic implements Gfo_invk {
 			img_fmtr.Add_full_img(tmp_bfr, hctx, page, src, xfer_itm, uid, lnki_href, Bool_.N, Xoh_lnki_consts.Tid_a_cls_image, Xoh_lnki_consts.Tid_a_rel_none, anch_ttl
 				, Xoh_file_fmtr__basic.Escape_xowa_title(lnki_ttl), xfer_itm.Html_w(), xfer_itm.Html_h(), img_view_src, alt
 				, xfer_itm.File_exists() ? Xoh_img_cls_.Tid__thumbimage : Xoh_img_cls_.Tid__none
-				, Xoh_img_cls_.Bry__none);
+				, Xoh_img_cls_.Bry__none, Bry_.Empty);
 			byte[] thumb = tmp_bfr.To_bry_and_clear();
 			html_fmtr.Add_thumb_core(bfr, hctx.Mode_is_hdump(), lnki_halign_bry, uid, div_width
 				, html_fmtr.Bld_thumb_file_image(thumb, Bld_caption_div(ctx, hctx, src, lnki, uid, img_orig_src, lnki_href), alt_html)
@@ -203,13 +203,29 @@ public class Xoh_file_wtr__basic implements Gfo_invk {
 				case Xop_lnki_align_h_.None:	bfr.Add(Div_float_none)	.Add_byte_nl();	div_align_exists = true; break;
 			}
 
+			byte[] lnki_valign = Bry_.Empty;
+			switch (lnki.Align_v()) {
+				case Xop_lnki_align_v_.Top:
+				case Xop_lnki_align_v_.Middle:
+				case Xop_lnki_align_v_.Bottom:
+				case Xop_lnki_align_v_.Super:
+				case Xop_lnki_align_v_.Sub:
+				case Xop_lnki_align_v_.TextTop:
+				case Xop_lnki_align_v_.TextBottom:
+				case Xop_lnki_align_v_.Baseline:
+					tmp_bfr.Add(Vertalign);
+					tmp_bfr.Add(Xop_lnki_align_v_.To_bry(lnki.Align_v()));
+					tmp_bfr.Add_byte(Byte_ascii.Quote);
+					lnki_valign = tmp_bfr.To_bry_and_clear();
+			}
+
 			// init vars
 			byte img_cls_tid = lnki.Border() == Bool_.Y_byte ? Xoh_img_cls_.Tid__thumbborder : Xoh_img_cls_.Tid__none;
 			byte[] img_cls_other = lnki.Lnki_cls(); // PAGE:en.s:Page:Notes_on_Osteology_of_Baptanodon._With_a_Description_of_a_New_Species.pdf/3; DATE:2014-09-06
 
 			Arg_nde_tkn lnki_link_tkn = lnki.Link_tkn();
 			if (lnki_link_tkn == Arg_nde_tkn.Null)		// link absent; just write it
-				img_fmtr.Add_full_img(bfr, hctx, page, src, xfer_itm, uid, lnki_href, Bool_.N, Xoh_lnki_consts.Tid_a_cls_image, Xoh_lnki_consts.Tid_a_rel_none, anch_ttl, Xoh_file_fmtr__basic.Escape_xowa_title(lnki_ttl), xfer_itm.Html_w(), xfer_itm.Html_h(), img_view_src, alt, img_cls_tid, img_cls_other);
+				img_fmtr.Add_full_img(bfr, hctx, page, src, xfer_itm, uid, lnki_href, Bool_.N, Xoh_lnki_consts.Tid_a_cls_image, Xoh_lnki_consts.Tid_a_rel_none, anch_ttl, Xoh_file_fmtr__basic.Escape_xowa_title(lnki_ttl), xfer_itm.Html_w(), xfer_itm.Html_h(), img_view_src, alt, img_cls_tid, img_cls_other, lnki_valign);
 			else {										// link exists; more logic; EX: [[File:A.png|thumb|link=B]]
 				// over-ride other vars based on link arg; below should be cleaned up
 				Arg_itm_tkn link_tkn = lnki_link_tkn.Val_tkn();
@@ -222,7 +238,7 @@ public class Xoh_file_wtr__basic implements Gfo_invk {
 				link_arg = link_arg_html == null ? lnki_href : link_arg_html;		// if parse fails, then assign to lnki_href; EX:link={{{1}}}
 				link_arg = Gfo_url_encoder_.Href_quotes_v2.Encode(link_arg);		// must encode quotes; PAGE:en.w:List_of_cultural_heritage_sites_in_Punjab,_Pakistan; DATE:2014-07-16; changed to use "v2" so not to double encode "%" values; DATE:2016-10-10
 				// if (Bry_.Len_gt_0(tmp_link_parser.Html_xowa_ttl())) lnki_ttl = tmp_link_parser.Html_xowa_ttl(); // DELETE: not sure why this is here; breaks test; DATE:2015-11-28
-				img_fmtr.Add_full_img(bfr, hctx, page, src, xfer_itm, uid, link_arg, a_href_is_file, tmp_link_parser.Html_anchor_cls(), tmp_link_parser.Html_anchor_rel(), anch_ttl, Xoh_file_fmtr__basic.Escape_xowa_title(xowa_title_bry), xfer_itm.Html_w(), xfer_itm.Html_h(), img_view_src, alt, img_cls_tid, img_cls_other);
+				img_fmtr.Add_full_img(bfr, hctx, page, src, xfer_itm, uid, link_arg, a_href_is_file, tmp_link_parser.Html_anchor_cls(), tmp_link_parser.Html_anchor_rel(), anch_ttl, Xoh_file_fmtr__basic.Escape_xowa_title(xowa_title_bry), xfer_itm.Html_w(), xfer_itm.Html_h(), img_view_src, alt, img_cls_tid, img_cls_other, lnki_valign);
 			}
 
 			// close "<div class=float>"
@@ -288,5 +304,6 @@ public class Xoh_file_wtr__basic implements Gfo_invk {
 	, Div_float_left			= Bry_.new_a7("<div class=\"floatleft\">")
 	, Div_float_right			= Bry_.new_a7("<div class=\"floatright\">")
 	, Atr_title					= Bry_.new_a7(" title=\"")
+	, Vertalign			= Bry_.new_a7(" style=\"vertical-align: ")
 	;
 }

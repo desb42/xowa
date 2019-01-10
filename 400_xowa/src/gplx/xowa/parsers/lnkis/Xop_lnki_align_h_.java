@@ -31,6 +31,3 @@ public class Xop_lnki_align_h_ {
 	;
 	public static byte[] To_bry(int v) {return Html_names[v];}
 }
-class Xop_lnki_align_v_ {
-	public static final byte None = 0, Top		= 1, Middle		= 2, Bottom		 = 4, Super		= 8, Sub        = 16, TextTop = 32, TextBottom = 64, Baseline = 127;
-}
