@@ -41,8 +41,8 @@ public class Cldr_name_loader {
 		// get file
 		Io_url url = (Io_url)urls_hash.Get_by(lang_key);
 		if (url == null) {
-			files_hash.Add(lang_key, Cldr_name_file.Empty);
-			Gfo_usr_dlg_.Instance.Warn_many("", "", "no cldrName file exists for lang; lang=~{lang}", lang_key);
+			urls_hash.Add(lang_key, Cldr_name_file.Empty);
+			Gfo_usr_dlg_.Instance.Warn_many("", "", "no cldrName file exists for lang; lang=~{0}", lang_key);
 			return Cldr_name_file.Empty;
 		}
 
@@ -109,6 +109,7 @@ public class Cldr_name_loader {
 				continue;
 			}
 			name = String_.Lower(name);
+			name = String_.Replace(name, "_", "-"); // CldrNamesEn_gb.json should have a key of "en-gb", not en_gb; ISSUE#:349; DATE:2019-02-01
 			rv.Add_if_dupe_use_1st(name, url);
 		}
 		return rv;
