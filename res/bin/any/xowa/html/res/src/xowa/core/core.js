@@ -54,8 +54,41 @@ if (!window.xowa) {
     s.appendChild(document.createTextNode(css));
   };
 
-  xowa.cfg.get = function(key) {
-    return window.xowa_global_values[key] || null;
+  // borrowed from mediawiki\resources\src\mediawiki\mediawiki.js L143
+  xowa.cfg.get = function(selection, fallback) {
+      var results, i;
+      var hasOwn = Object.prototype.hasOwnProperty;
+      fallback = arguments.length > 1 ? fallback : null;
+
+      if ( Array.isArray( selection ) ) {
+        results = {};
+        for ( i = 0; i < selection.length; i++ ) {
+          if ( typeof selection[ i ] === 'string' ) {
+            results[ selection[ i ] ] = hasOwn.call( window.xowa_global_values, selection[ i ] ) ?
+              window.xowa_global_values[ selection[ i ] ] :
+              fallback;
+          }
+        }
+        return results;
+      }
+
+      if ( typeof selection === 'string' ) {
+        return hasOwn.call( window.xowa_global_values, selection ) ?
+          window.xowa_global_values[ selection ] :
+          fallback;
+      }
+
+      if ( selection === undefined ) {
+        results = {};
+        for ( i in window.xowa_global_values ) {
+          results[ i ] = window.xowa_global_values[ i ];
+        }
+        return results;
+      }
+
+      // Invalid selection key
+      return fallback;
+    //return window.xowa_global_values[key] || null;
   };
   xowa.cfg.set = function(key, val) {
     window.xowa_global_values[key] = val;
@@ -95,6 +128,10 @@ if (!window.xowa) {
         log: function () {},
         config: {
             get: xowa.cfg.get
+        },
+        util: {
+          //$content: window.jQuery ? jQuery('#mw-content-text') : null
+          $content: window.jQuery ? jQuery('#content') : null
         },
         //simulate mediaWiki.hook: Execute functions queued for 'wikipage.content' directly, and ignore anything else
         hook: function (name) {

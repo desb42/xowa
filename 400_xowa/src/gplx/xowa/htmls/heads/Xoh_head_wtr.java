@@ -130,8 +130,13 @@ public class Xoh_head_wtr {
 	public void Write_js_global_ini_atr_msg(Xowe_wiki wiki, byte[] key)	{Write_js_global_ini_atr(key, Bool_.Y, wiki.Msg_mgr().Val_by_key_obj(key));}
 	private void Write_js_global_ini_atr(byte[] key, boolean quote_val, byte[] val) {
 		Write_js_global_ini_atr_bgn(key);
-		if (quote_val)
-			Write_js_quote(Byte_ascii.Apos, val);
+		if (quote_val) { // check if val contains an apos if so switch to double quotes (not sutre if apos and quote found in the same string)
+			int apos = Bry_find_.Find_fwd(val, Byte_ascii.Apos);
+			if (apos == Bry_find_.Not_found)
+				Write_js_quote(Byte_ascii.Apos, val);
+			else
+				Write_js_quote(Byte_ascii.Quote, val);
+		}
 		else
 			bfr.Add(val);
 		bfr.Add_byte(Byte_ascii.Comma);

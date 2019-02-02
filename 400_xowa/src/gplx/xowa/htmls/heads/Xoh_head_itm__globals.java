@@ -64,6 +64,11 @@ public class Xoh_head_itm__globals extends Xoh_head_itm__base {
 		wtr.Write_js_global_ini_atr_val(Key_wgDefaultDateFormat			, Date_format_default);
 		wtr.Write_js_global_ini_atr_obj(Key_wgMonthNames				, months_long);
 		wtr.Write_js_global_ini_atr_obj(Key_wgMonthNamesShort			, months_short);
+		Xoa_ttl ttl = page.Ttl();
+		wtr.Write_js_global_ini_atr_obj(Key_wgNamespaceNumber			, Int_.To_bry(page.Ttl().Ns().Id()));
+		wtr.Write_js_global_ini_atr_val(Key_wgPageName			, ttl.Full_db());
+		wtr.Write_js_global_ini_atr_val(Key_wgTitle			, ttl.Full_txt_w_ttl_case());
+		wtr.Write_js_global_ini_atr_val(Key_wgCanonicalNamespace		, ttl.Ns().Name_db());
 	}
 	public static final    byte[]	// NOTE: most of these are for the table-sorter
 	  Key_mode_is_gui					= Bry_.new_a7("mode_is_gui")
@@ -77,6 +82,10 @@ public class Xoh_head_itm__globals extends Xoh_head_itm__base {
 	, Key_wgDefaultDateFormat			= Bry_.new_a7("wgDefaultDateFormat")
 	, Key_wgMonthNames					= Bry_.new_a7("wgMonthNames")
 	, Key_wgMonthNamesShort				= Bry_.new_a7("wgMonthNamesShort")
+	, Key_wgNamespaceNumber				= Bry_.new_a7("wgNamespaceNumber")
+	, Key_wgPageName  				= Bry_.new_a7("wgPageName")
+	, Key_wgTitle				= Bry_.new_a7("wgTitle")
+	, Key_wgCanonicalNamespace			= Bry_.new_a7("wgCanonicalNamespace")
 	;
 	private static byte[] Html_js_table_months(Xoh_head_wtr tmp_wtr, Xow_msg_mgr msg_mgr, int january_id, int december_id) {
 		tmp_wtr.Write_js_ary_bgn();
