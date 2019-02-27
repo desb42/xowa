@@ -59,11 +59,20 @@ function remove_perl_comments(str) {
     var end_skip = -1;
     if (str[bgn_pos + 1] == '>') {  // #>block#<
       end_pos = str.indexOf('<#', bgn_pos + 2);   // +2: skip "#>"
-      end_skip = 2; // skip "#<"
+      end_skip = 2; // skip "<#"
     }
     else {                          // #line\n
       end_pos = str.indexOf('\n', bgn_pos + 1);   // +1: skip "#"
+    	// or an anchor name?
+    	// stricktly we should find the start of line
+    	var qe = str.indexOf('"', bgn_pos), qs = str.lastIndexOf('"', bgn_pos);
+    	if (qs >= 0 && qe >= 0 && bgn_pos > qs && bgn_pos < qe && qe < end_pos) {
+    		bgn_pos += 1; // include the #
+    		end_pos = bgn_pos;
+    		end_skip = 0;
+    	} else {
       end_skip = 0; // do not skip \n; retain it; needed for lines like "code #comment\n"
+    }
     }
     if (end_pos == -1) {  // end not found; not a comment
       rv += str.substring(prv_pos); // append rest
@@ -79,21 +88,24 @@ function remove_perl_comments(str) {
 function replaceDefinesAndPresets (code) {
 	var match;
 	/*jshint boss: true*/
+	// Defines are case insensitive
 	while (match = (/^define\s+(\$\w+)\s*=\s*(.*?) *$/mi).exec(code)) {
-		code = code.replace(new RegExp(match[1].replace(/\$/g, '\\$') + '\\b', 'g'), match[2]);
+		code = code.replace(new RegExp(match[1].replace(/\$/g, '\\$') + '\\b', 'gi'), match[2]);
 	}
 	/*jshint boss: false*/
-	return code.replace(/preset\s*=\s*timevertical[_\s]+onebar[_\s]+unityear/i,
-		'PlotArea   = left:45 right:10 top:10 bottom:10\n' +
+	var presetplot = '';
+	var code = code.replace(/preset\s*=\s*timevertical[_\s]+onebar[_\s]+unityear/i, function (s) {
+		presetplot = '   mark:(line,white) align:left fontsize:S width:20 shift:(20,0)';
+		return 'PlotArea   = left:45 right:10 top:10 bottom:10\n' +
 		'TimeAxis   = orientation:vertical format:yyyy\n' +
 		'DateFormat = yyyy\n' +
 		'AlignBars  = early\n' +
-		'ScaleMajor = unit:year\n' +
-		'ScaleMinor = unit:year\n' +
-		'PlotData   =\n' +
-		'   mark:(line,white) align:left fontsize:S width:20 shift:(20,0)')
-		.replace(/preset\s*=\s*timehorizontal[_\s]+autoplacebars[_\s]+unityear/i,
-		'ImageSize = height:auto barincrement:20\n' +
+		'ScaleMajor = unit:year preset:true\n' +
+		'ScaleMinor = unit:year preset:true\n'
+		})
+		.replace(/preset\s*=\s*timehorizontal[_\s]+autoplacebars[_\s]+unityear/i, function (s) {
+		presetplot = '       align:left anchor:from fontsize:M width:15 shift:(4,-6) textcolor:black';
+		return 'ImageSize = height:auto barincrement:20\n' +
 		'PlotArea   = left:25 right:25 top:15 bottom:30\n' +
 		'TimeAxis   = orientation:horizontal format:yyyy\n' +
 		'Colors =\n' +
@@ -103,11 +115,16 @@ function replaceDefinesAndPresets (code) {
 		'BackgroundColors = canvas:canvas\n' +
 		'DateFormat = yyyy\n' +
 		'AlignBars = justify\n' +
-		'ScaleMajor = unit:year grid:grid1\n' +
-		'ScaleMinor = unit:year\n' +
-		'Legend = orientation:vertical left:35 top:130\n' +
+		'ScaleMajor = unit:year grid:grid1 preset:true\n' +
+		'ScaleMinor = unit:year preset:true\n' +
+		'Legend = orientation:vertical left:35 top:130\n'
+		});
+		if (presetplot) {
+			code = code.replace(/PlotData\s*=/i, 
 		'PlotData =\n' +
-		'       align:left anchor:from fontsize:M width:15 shift:(4,-6) textcolor:black');
+			presetplot);
+		}
+	return code;
 }
 //parses the arguments string to an object
 function parseArguments (args) {
@@ -131,7 +148,8 @@ function parseArguments (args) {
 		if (pos === -1) {
 			ret.val = args[i];
 		} else {
-			ret[args[i].substr(0, pos).toLowerCase()] = args[i].substr(pos + 1).replace(/^"(.*)"$/, '$1').replace(/(?:~~?|_|\^)/g, unescape);
+			// delay removal of double quotes
+			ret[args[i].substr(0, pos).toLowerCase()] = args[i].substr(pos + 1).replace(/(?:~~?|_|\^)/g, unescape);
 		}
 	}
 	return ret;
@@ -176,24 +194,59 @@ function parseLineData (data, lastLineData) {
 	}
 }
 //parses the arguments for the PlotData command
-function parsePlotData (data, lastPlotData) {
-	if (data.barset && data.barset.toLowerCase() === 'break') {
-		lastPlotData.nextBarsetNumber = 0;
-		return false;
-	}
+function parsePlotData (data, lastPlotData, ret) {
 	if (data.barset && data.barset.toLowerCase() === 'skip') {
 		lastPlotData.nextBarsetNumber++;
-		return false;
+		return;
 	}
-	if (data.bar) {
+	if (data.bar !== undefined) {  // the name of the bar can be blank
+		if (lastPlotData.nobar) {
+			ret.plots.push({bar:lastPlotData.bar, type:'at'});
+		}
+		lastPlotData.nobar = true;
 		lastPlotData.barset = undefined;
 		lastPlotData.bar = data.bar;
 	} else if (data.barset) {
+		lastPlotData.nextBarsetNumber = 0;
+		if (data.barset.toLowerCase() == 'break') {
+			if (data.at === undefined)
+				return;
+			data.barset = undefined;
+		} else {
 		lastPlotData.barset = data.barset;
 		lastPlotData.bar = undefined;
-		lastPlotData.nextBarsetNumber = 0;
+		}
 	}
 	if (data.at || data.from || data.till) {
+		// extra work for shift - is this a single value, if so, need to merge
+		if (data.shift && lastPlotData.shift) {
+			var match, x = 0, y = 0;
+			// two values for data.shift ?
+			match = (/^\(\s*([0-9.\-]*)\s*,\s*([0-9.\-]*)\s*\)$/).exec(data.shift);
+			if (match && match[2]) {
+				// do nothing
+			} else {
+				// decode lastPlotData.shift
+				match = (/^\(\s*([0-9.\-]*)\s*,\s*([0-9.\-]*)\s*\)$/).exec(lastPlotData.shift);
+				if (match) {
+					x = parseLength(match[1]);
+					y = parseLength(match[2]);
+				}
+				// single x value [eg (-40) or (13,)]
+				match = (/^\(\s*([0-9.\-]*)\s*(,\s*)?\)$/).exec(data.shift);
+				if (match) {
+					x = parseLength(match[1]);
+				} else {
+					// single y value [eg (,-15)]
+					match = (/^\(\s*,\s*([0-9.\-]*)\s*\)$/).exec(data.shift);
+					if (match) {
+						y = parseLength(match[1]);
+					}
+				}
+				// rebuild shift
+				data.shift = '(' + String(x) + ',' + String(y) + ')'
+			}
+		}
 		extend(data, lastPlotData, true);
 		if (data.barset) {
 			data.bar = data.barset + '#' + lastPlotData.nextBarsetNumber;
@@ -201,15 +254,15 @@ function parsePlotData (data, lastPlotData) {
 		}
 	} else {
 		extend(lastPlotData, data);
-		return false;
+		return;
 	}
+	lastPlotData.nobar = false;
 	if (data.from && data.till) {
 		data.type = 'bar';
-		return data;
 	} else /*if (data.at)*/ {
 		data.type = 'at';
-		return data;
 	}
+	ret.plots.push(data);
 }
 //parses the arguments for the TextData command
 function parseTextData (data, lastTextData) {
@@ -242,10 +295,11 @@ function parseCode (code) {
 			alignBars: 'early',
 			backgroundcolors: {canvas: 'white', bars: ''},
 			barData: {},
+			barOrder: [],
 			colors: {},
 			dateFormat: 'x.y',
 			imageSize: {width: '0', height: '0', barincrement: '0'},
-			legend: {show: false, orientation: 'ver', position: 'bottom', columns: '0', columnwidth: '0', left: '0', top: '0'},
+			legend: {show: false, orientation: 'ver'},
 			lines: [],
 			period: {from: '0', to: '1'},
 			plotArea: {left: '0', top: '0', right: '0', bottom: '0'},
@@ -256,10 +310,12 @@ function parseCode (code) {
 			timeAxis: {format: 'yyyy', orientation: 'hor', order: ''}
 		}, data, i, j,
 		lastLineData, lastPlotData, lastTextData;
+
+	lastPlotData = {bar: '', anchor: 'middle', color: 'rgb(0,0.6,0)', fontsize: 'S', align: 'left', width: '25', nobar:false}; //documentation says width is calculated if missing, but I don't see this
 	for (i = 0; i < commands.length; i++) {
-		lastLineData = {width: '2', color: 'black'};
-		lastPlotData = {bar: '', anchor: 'middle', color: 'rgb(0,0.6,0)', fontsize: 'S', width: '25'}; //documentation says width is calculated if missing, but I don't see this
+		lastLineData = {width: '2', color: 'black', layer: 'front'};
 		lastTextData = {pos: '(0,0)', textcolor: 'black', fontsize: 'S', tabs: '', skipY: 0};
+		lastPlotData.anchor = 'middle';
 		for (j = 0; j < commands[i].data.length; j++) {
 			data = commands[i].data[j];
 			switch (commands[i].name) {
@@ -277,11 +333,13 @@ function parseCode (code) {
 						text: data.text,
 						link: data.link
 					};
+					ret.barOrder.push(data.bar);
 				} else if (data.barset) {
 					ret.barData[data.barset] = {
 						text: data.text,
 						link: data.link
 					};
+					ret.barOrder.push(data.barset);
 				}
 				break;
 			case 'colors':
@@ -305,6 +363,14 @@ function parseCode (code) {
 				ret.legend.show = true;
 				extend(ret.legend, data);
 				ret.legend.orientation = ret.legend.orientation.toLowerCase().substr(0, 3);
+				if (ret.legend.position === undefined) {
+					if ((ret.legend.left === undefined) && (ret.legend.top === undefined))
+					{
+						ret.legend.position = "bottom";
+					}
+				} else {
+					ret.legend.position = ret.legend.position.toLowerCase();
+				}
 				break;
 			case 'linedata':
 				data = parseLineData(data, lastLineData);
@@ -319,12 +385,10 @@ function parseCode (code) {
 				extend(ret.plotArea, data);
 				break;
 			case 'plotdata':
-				data = parsePlotData(data, lastPlotData);
-				if (data) {
-					ret.plots.push(data);
-				}
+				parsePlotData(data, lastPlotData, ret);
 				break;
 			case 'scalemajor':
+				if (data.preset === undefined)
 				ret.scaleMajor.show = true;
 				if (data.grid) {
 					data.gridcolor = data.grid;
@@ -332,6 +396,7 @@ function parseCode (code) {
 				extend(ret.scaleMajor, data);
 				break;
 			case 'scaleminor':
+				if (data.preset === undefined)
 				ret.scaleMinor.show = true;
 				if (data.grid) {
 					data.gridcolor = data.grid;
@@ -419,6 +484,7 @@ function parseColor (color, data) {
 		r = Math.round(r); g = Math.round(g); b = Math.round(b);
 		return 'rgb(' + r + ',' + g + ',' + b + ')';
 	});
+	color = color.toLowerCase(); // make sure again
 	if (color in namedColors) {
 		color = namedColors[color];
 	}
@@ -473,9 +539,7 @@ function parseLineHeight (size) {
 //gets the names of all bars from the data
 function getBarNames (data) {
 	var names = [], allNames = [], allNamesCorr = [], i, j, n, hasBarData = false, c;
-	for (n in data.barData) {
-		names.push(n);
-	}
+	names = data.barOrder;
 	if (names.length) {
 		hasBarData = true;
 	}
@@ -515,11 +579,7 @@ function getBarNames (data) {
 //gets the canvas size and inner size from the data
 function getCanvasSize (data) {
 	var ret = {}, barCount = 0, i;
-	for (i = 0; i < data.barNames.allNames.length; i++) { //barsets seem to count one bar less than they contain
-		if (data.barNames.allNames[i].indexOf('#0') === -1) {
-			barCount++;
-		}
-	}
+	barCount = data.barNames.allNames.length;
 	data.xAxisIsTime = (data.timeAxis.orientation === 'hor');
 	if (data.imageSize.width === 'auto') {
 		ret.innerWidth = barCount * parseLength(data.imageSize.barincrement);
@@ -538,9 +598,11 @@ function getCanvasSize (data) {
 		}
 	}
 	if (data.imageSize.height === 'auto') {
-		ret.innerHeight = barCount * parseLength(data.imageSize.barincrement);
+		var barinc = parseLength(data.imageSize.barincrement, 20);
+		var decrement = barinc > 25? 2 : 1;
+		ret.innerHeight = (barCount - 1) * (barinc - decrement) + 12; //????? 40-01, StylipS ???
 		ret.top = parseLength(data.plotArea.top, ret.innerHeight);
-		ret.bottom = parseLength(data.plotArea.bottom, ret.innerHeight);
+		ret.bottom = parseLength(data.plotArea.bottom, ret.innerHeight) - 2;
 		ret.height = ret.top + ret.innerHeight + ret.bottom;
 	} else {
 		ret.height = parseLength(data.imageSize.height);
@@ -587,6 +649,8 @@ function getBarPositions (data) {
 			barData[n].width = 25;
 		}
 		l += barData[n].width * barData[n].count;
+		if (barData[n].count > 1)
+			l += 2; //??
 	}
 	if (data.xAxisIsTime) {
 		l = data.canvas.innerHeight - l;
@@ -657,6 +721,67 @@ function getTimeParser (data) {
 	};
 }
 
+function validateLegend(data) {
+	var legend = data.legend
+	if (legend.columns === undefined) {
+		legend.columns = 1;
+		if (   (legend.orientation === 'ver')
+			&& (legend.position === 'top' || legend.position === 'bottom'))
+		{
+			if (legend.length > 10) {
+				legend.columns = 3;
+			}
+			else if (legend.length > 5) {
+				legend.columns = 2;
+			}
+		}
+	}
+
+	if (legend.position === 'top') {
+		if (legend.left === undefined) {
+			legend.left = data.canvas.left;
+		}
+		if (legend.top === undefined) {
+			legend.top = data.canvas.innerHeight - 20;
+		}
+		if (   (legend.columnwidth === undefined)
+			&& (legend.columns > 1))
+		{
+			legend.columnwidth = String(
+					(data.canvas.left + data.canvas.width - 20) /
+						legend.columns
+			);
+		}
+	}
+	else if (legend.position === 'bottom') {
+		if (legend.left === undefined) {
+			legend.left = data.canvas.left;
+		}
+		if (legend.top === undefined) {
+			legend.top = data.canvas.bottom - 40;
+		}
+		if (   (legend.columnwidth === undefined)
+			&& (legend.columns > 1))
+		{
+			legend.columnwidth = String(
+					(data.canvas.left + data.canvas.innerWidth - 20) /
+						legend.columns
+			);
+		}
+	}
+	else if (legend.position === 'right') {
+		if (legend.left === undefined) {
+			legend.left =
+				(data.canvas.left + data.canvas.innerWidth + 20);
+		}
+		if (legend.top === undefined) {
+			legend.top =
+				(data.canvas.bottom + data.canvas.innerHeight - 20);
+		}
+	}
+	return legend;
+}
+
 /**
  * functions to draw different things
  */
@@ -664,10 +789,6 @@ function getTimeParser (data) {
 //draws a link
 function drawLink (ctx, target, x, y, w, h) {
 	var a;
-	target = target.replace(/\s+/g, '_');
-	if (!(/^https?:\/\//).test(target)) {
-		target = '/wiki/' + target;
-	}
 	a = document.createElement('a');
 	a.style.position = 'absolute';
 	a.style.display = 'block';
@@ -675,6 +796,14 @@ function drawLink (ctx, target, x, y, w, h) {
 	a.style.top = y + 'px';
 	a.style.width = w + 'px';
 	a.style.height = h + 'px';
+
+	a.title = target;
+	target = target.replace(/\s+/g, '_');
+	if (!(/^https?:\/\//).test(target)) {
+		target = '/wiki/' + target;
+		if (xowa.app.mode == 'http_server')
+			target = '/' + x_p.wiki + target;
+	}
 	a.href = target;
 	ctx.canvas.parentNode.appendChild(a);
 }
@@ -682,6 +811,7 @@ function drawLink (ctx, target, x, y, w, h) {
 //draws text at some position
 function drawTextAtPos (ctx, text, x, y, options) {
 	var pre, linked, post, link, match, xLink, yLink, wLink, hLink;
+	while (true) {
 	if (options.link) {
 		pre = '';
 		linked = text;
@@ -725,16 +855,16 @@ function drawTextAtPos (ctx, text, x, y, options) {
 		case 'bottom': yLink -= hLink; break;
 		default: yLink -= hLink * 0.75; //FIXME
 		}
-		ctx.strokeStyle = '#4545ed';
-		ctx.fillStyle = '#4545ed';
+			ctx.strokeStyle = '#0a0adb' // was '#4545ed'
+			ctx.fillStyle = '#0a0adb'
 		ctx.fillText(linked, x, y);
 		drawLink(ctx, link, Math.round(xLink), Math.round(yLink), wLink, hLink);
 		x += wLink;
 	}
-	if (post) {
-		ctx.strokeStyle = options.color;
-		ctx.fillStyle = options.color;
-		ctx.fillText(post, x, y);
+		if (post) 
+			text = post;
+		else
+			break;
 	}
 }
 //draws text which may contain tabs
@@ -745,11 +875,18 @@ function drawMultiTabText (ctx, text, options) {
 	for (i = 0; i < tabChunks.length; i++) {
 		pos = (options.tabs[i - 1] || '0-left').split('-');
 		x = options.x + Number(pos[0]);
-		if (pos[1] !== 'left') {
-			if (options.link) {
 				rawText = tabChunks[i];
-			} else {
-				rawText = tabChunks[i].replace(/\[\[?(?:.*?\|)?([\s\S]*?)\]?\]/g, '$1');
+		// extra check for quoted string (leading and/or trailing)
+		var ofs1 = 0, ofs2 = rawText.length;
+		if (rawText.charAt(0) === '"')
+			ofs1 = 1;
+		if (rawText.charAt(ofs2 - 1) === '"')
+			ofs2 -= 1;
+		if (ofs1 || ofs2 != rawText.length)
+			rawText = rawText.substr(ofs1, ofs2 - 1);
+		if (pos[1] !== 'left') {
+			if (!options.link) {
+				rawText = rawText.replace(/\[\[?(?:.*?\|)?([\s\S]*?)\]?\]/g, '$1');
 			}
 			width = ctx.measureText(rawText).width;
 			if (pos[1] === 'right') {
@@ -758,7 +895,7 @@ function drawMultiTabText (ctx, text, options) {
 				x -= width / 2;
 			}
 		}
-		drawTextAtPos(ctx, tabChunks[i], x, y, options);
+		drawTextAtPos(ctx, rawText, x, y, options);
 	}
 }
 //draws text at some position which may contain line breaks
@@ -781,7 +918,7 @@ function drawMultiLineText (ctx, data, text, pos) {
 	fontsize = parseTextSize(text.fontsize);
 	lineheight = parseLength(text.lineheight || '0') || parseLineHeight(text.fontsize);
 	lines = txt.split('\n');
-	ctx.font = fontsize + 'px sans-serif';
+	ctx.font = 'bold ' + fontsize + 'px sans-serif';
 	ctx.textAlign = pos.align;
 	ctx.textBaseline = pos.valign || 'alphabetic';
 	options = {
@@ -807,11 +944,7 @@ function drawAxis (ctx, data, axis) {
 	ctx.textAlign = 'center';
 	color = parseColor(axis.gridcolor, data);
 	if (axis.major) {
-		ctx.beginPath();
-		ctx.moveTo(data.canvas.left, data.canvas.height - data.canvas.bottom);
-		ctx.lineTo(data.xAxisIsTime ? data.canvas.width - data.canvas.right : data.canvas.left, data.xAxisIsTime ? data.canvas.height - data.canvas.bottom : data.canvas.top);
-		ctx.closePath();
-		ctx.stroke();
+		drawAxisLine(ctx, data);
 	}
 	t = data.parseTime(axis.start);
 	if (axis.start === 'start') {
@@ -820,13 +953,17 @@ function drawAxis (ctx, data, axis) {
 		y = Number(axis.start.replace(/^.*\//, ''));
 	}
 	inc = Number(axis.increment) || 1;
-	d = data.parseTime((data.dateFormat === 'yyyy' || data.dateFormat === 'x.y' ? '' : '01/01/') + String(y + inc)) - data.parseTime(String(y));
+	if (data.dateFormat === 'x.y') {
+		d = data.parseTime(String(y + inc)) - data.parseTime(String(y));
+	} else {
+		d = data.parseTime((data.dateFormat === 'yyyy' ? '' : '01/01/') + String(y + inc)) - data.parseTime(String(y));
 	if (axis.unit === 'month') {
 		inc /= 12;
 		d /= 12;
 	} else if (axis.unit === 'day') {
 		inc /= 365.25;
 		d /= 365.25;
+	}
 	}
 	while (t <= 1) {
 		if (data.xAxisIsTime) {
@@ -942,7 +1079,7 @@ function drawLine (ctx, data, line) {
 			y1 = data.canvas.height - parseLength(match[4], data.canvas.height);
 		}
 	}
-	ctx.lineWidth = parseLength(line.width);
+	ctx.lineWidth = parseLength(line.width) + 1; // slightly thicker?!
 	ctx.strokeStyle = parseColor(line.color, data);
 	ctx.beginPath();
 	ctx.moveTo(x0, y0);
@@ -950,16 +1087,66 @@ function drawLine (ctx, data, line) {
 	ctx.closePath();
 	ctx.stroke();
 }
-//draws a bar (PlotData)
-function drawBar (ctx, data, bar) {
-	var t0, t1, v0, v1, x0, x1, y0, y1, color;
+//draws the backgound to all bars
+function drawBarBackgrounds (ctx, data) {
+	var i;
+	for (i = 0; i < data.plots.length; i++) {
+		if (data.plots[i].type === 'bar') {
+			drawBarBackground(ctx, data, data.plots[i]);
+		}
+	}
+}
+// draw bar background - if any
+function drawBarBackground (ctx, data, bar) {
+	var t0, t1, v0, v1, x0, x1, x2, x3, y0, y1, y2, y3, color;
 
 	if (!(bar.bar in data.barPositions)) {
+		return;
+	}
+	if (data.backgroundcolors.bars === undefined) {
 		return;
 	}
 	t0 = parseTime(bar.from, data);
 	t1 = parseTime(bar.till, data);
 	v0 = data.barPositions[bar.bar].pos;
+	v1 = v0;
+	v0 -= parseLength(bar.width) / 2;
+	v1 += parseLength(bar.width) / 2;
+
+	if (data.xAxisIsTime) {
+		x0 = t0; x1 = t1;
+		y0 = v0 + data.canvas.top; y1 = v1 + data.canvas.top;
+		x2 = data.canvas.left; x3 = data.canvas.left + data.canvas.innerWidth;
+		y2 = y0; y3 = y1;
+	} else {
+		x0 = data.canvas.left + v0; x1 = data.canvas.left + v1;
+		y0 = t0; y1 = t1;
+		x2 = x0; x3 = x1;
+		y2 = data.canvas.top; y3 = data.canvas.top + data.canvas.innerHeight;
+	}
+
+	color = parseColor(data.backgroundcolors.bars, data);
+	ctx.fillStyle = color;
+	ctx.strokeStyle = color;
+	ctx.beginPath();
+	ctx.rect(x2, y2, x3 - x2, y3 - y2);
+	ctx.closePath();
+	ctx.fill();
+}
+
+//draws a bar (PlotData)
+function drawBar (ctx, data, bar) {
+	var t0, t1, v0, v1, x0, x1, y0, y1, color;
+
+	if (bar.bar in data.barPositions) {
+		v0 = data.barPositions[bar.bar].pos;
+	} else if (bar.barset in data.barPositions) {
+		v0 = data.barPositions[bar.barset].pos;
+	} else {
+		return;
+	}
+	t0 = parseTime(bar.from, data);
+	t1 = parseTime(bar.till, data);
 	v1 = v0;
 	v0 -= parseLength(bar.width) / 2;
 	v1 += parseLength(bar.width) / 2;
@@ -981,12 +1168,26 @@ function drawBar (ctx, data, bar) {
 	ctx.rect(x0, y0, x1 - x0, y1 - y0);
 	ctx.closePath();
 	ctx.fill();
+	// draw start mark if any
+	if (bar.mark && bar.mark !== 'none') {
+		ctx.lineWidth = 1;
+		ctx.strokeStyle = parseColor(bar.mark.replace(/^\(.*?,\s*|\s*\)$/g, ''), data);
+		ctx.beginPath();
+		ctx.moveTo(data.xAxisIsTime ? x0 : x1, data.xAxisIsTime ? y1 : y0);
+		ctx.lineTo(x0, y0);
+		ctx.closePath();
+		ctx.stroke();
+	}
 }
 //draws something on a bar (PlotData)
 function drawMarkerOrText (ctx, data, bar) {
 	var pos = {}, t0, t1, v0, v1, x0, x1, y0, y1, match;
 
-	if (!(bar.bar in data.barPositions)) {
+	if (bar.bar in data.barPositions) {
+		v0 = data.barPositions[bar.bar].pos;
+	} else if (bar.barset in data.barPositions) {
+		v0 = data.barPositions[bar.barset].pos;
+	} else {
 		return;
 	}
 
@@ -994,10 +1195,13 @@ function drawMarkerOrText (ctx, data, bar) {
 		t0 = parseTime(bar.from, data);
 		t1 = parseTime(bar.till, data);
 	} else {
+		if (bar.at === undefined) {
+			return;
+		}
 		t0 = parseTime(bar.at, data);
 		t1 = t0;
 	}
-	v0 = data.barPositions[bar.bar].pos;
+//	v0 = data.barPositions[bar.bar].pos;
 	v1 = v0;
 	v0 -= parseLength(bar.width) / 2;
 	v1 += parseLength(bar.width) / 2;
@@ -1026,7 +1230,11 @@ function drawMarkerOrText (ctx, data, bar) {
 			pos.x = (x0 + x1) / 2;
 		}
 		pos.align = bar.align || 'left';
-		pos.valign = 'bottom';
+		if (bar.barset === undefined) {
+			pos.y += 1 //??
+			pos.valign = 'bottom'; // else default of alphabetic
+		}
+		// match (20,30) and (-40)
 		if (bar.shift) {
 			match = (/^\(\s*([0-9.\-]*)\s*,\s*([0-9.\-]*)\s*\)$/).exec(bar.shift);
 			if (match) {
@@ -1034,14 +1242,16 @@ function drawMarkerOrText (ctx, data, bar) {
 				pos.y -= parseLength(match[2], data.canvas.height);
 			}
 		}
+
 		drawMultiLineText(ctx, data, bar, pos);
 	}
-	if (bar.mark) {
+	// draw end mark if any
+	if (bar.mark && bar.mark !== 'none') {
 		ctx.lineWidth = 1;
 		ctx.strokeStyle = parseColor(bar.mark.replace(/^\(.*?,\s*|\s*\)$/g, ''), data);
 		ctx.beginPath();
-		ctx.moveTo(data.xAxisIsTime ? x1 : x0, data.xAxisIsTime ? y0 : y1);
-		ctx.lineTo(x1, y1);
+		ctx.moveTo(data.xAxisIsTime ? x1 : x0 - 10, data.xAxisIsTime ? y0 : y1);
+		ctx.lineTo(data.xAxisIsTime ? x1 : x0 + 10, y1);
 		ctx.closePath();
 		ctx.stroke();
 	}
@@ -1054,7 +1264,14 @@ function drawText (ctx, data, text) {
 	}
 	drawMultiLineText(ctx, data, text, {x: Number(match[1]), y: data.canvas.height - Number(match[2]), align: 'left', valign: 'bottom'});
 }
-
+//draws a horizontl axis line
+function drawAxisLine(ctx, data) {
+	ctx.beginPath();
+	ctx.moveTo(data.canvas.left, data.canvas.height - data.canvas.bottom);
+	ctx.lineTo(data.xAxisIsTime ? data.canvas.width - data.canvas.right : data.canvas.left, data.xAxisIsTime ? data.canvas.height - data.canvas.bottom : data.canvas.top);
+	ctx.closePath();
+	ctx.stroke();
+}
 //draws all axes and backgrounds
 function drawAxes (ctx, data) {
 	var color;
@@ -1065,22 +1282,17 @@ function drawAxes (ctx, data) {
 	ctx.rect(0, 0, data.canvas.width, data.canvas.height);
 	ctx.closePath();
 	ctx.fill();
-	if (data.backgroundcolors.bars) {
-		color = parseColor(data.backgroundcolors.bars, data);
-		ctx.fillStyle = color;
-		ctx.strokeStyle = color;
-		ctx.beginPath();
-		ctx.rect(data.canvas.left, data.canvas.top, data.canvas.innerWidth, data.canvas.innerHeight);
-		ctx.closePath();
-		ctx.fill();
-	}
+	drawBarBackgrounds(ctx, data);
 	if (data.scaleMinor.show) {
 		drawAxis(ctx, data, data.scaleMinor);
 	}
 	if (data.scaleMajor.show) {
 		drawAxis(ctx, data, data.scaleMajor);
 	}
-	if (data.barNames.names.length > 1) {
+	else {
+		drawAxisLine(ctx, data);
+	}
+	if (data.barNames.allNames.length > 1) {
 		drawDataAxis(ctx, data);
 	}
 }
@@ -1090,6 +1302,8 @@ function drawLegend (ctx, data) {
 	if (!data.legend.show) {
 		return;
 	}
+	data.legend = validateLegend(data);
+
 	for (color in data.colors) {
 		if (!data.colors[color].legend || data.colors[color].legend === 'n' || data.colors[color].legend === 'N') {
 			continue;
@@ -1097,22 +1311,18 @@ function drawLegend (ctx, data) {
 		legend.push(color);
 	}
 	cols = Number(data.legend.columns);
-	if (cols === 0) {
-		if (legend.length <= 5) {
-			cols = 1;
-		} else if (legend.length <= 10) {
-			cols = 2;
-		} else {
-			cols = 3;
-		}
-	}
 	entriesPerCol = Math.ceil(legend.length / cols);
+	// possibly adjust legend to fit in 'bottom'
+	if (cols == 1 && entriesPerCol*17 > data.legend.top) {
+		entriesPerCol = parseInt(data.legend.top/17);
+	}
+
 	if (data.legend.orientation === 'hor') {
 		x = parseLength(data.legend.left, data.canvas.width) || 5;
 		y = data.canvas.height - (parseLength(data.legend.top, data.canvas.height) || (data.legend.position === 'top' ? data.canvas.height - 5 : 22));
 	} else {
-		x = parseLength(data.legend.left, data.canvas.width) || (data.legend.position === 'right' ? data.canvas.width - data.canvas.right + 5 : 5);
-		y = data.canvas.height - (parseLength(data.legend.top, data.canvas.height) || (data.legend.position !== 'bottom' ? data.canvas.height - 5 : 17 * entriesPerCol + 5));
+		x = parseLength(data.legend.left, data.canvas.width);
+		y = data.canvas.height - (parseLength(data.legend.top, data.canvas.height) );
 	}
 	oldY = y;
 	textWidthLargest = 0;
@@ -1131,16 +1341,18 @@ function drawLegend (ctx, data) {
 		ctx.fill();
 		ctx.fillStyle = 'black';
 		ctx.textAlign = 'left';
-		ctx.textBaseline = 'top';
-		ctx.fillText(text, x + 23, y);
+		ctx.textBaseline = 'bottom';
+		ctx.fillText(text, x + 23, y + 12 + 1);
 		if (data.legend.orientation === 'hor') {
-			x += Math.round(ctx.measureText(text).width * 1.5) + 26;
+			// use constant separation (say 26 - same size as the colour blob)
+			x += Math.round(ctx.measureText(text).width) + 26 + 26;
 		} else {
 			textWidthLargest = Math.max(textWidthLargest, ctx.measureText(text).width);
 			if ((i + 1) % entriesPerCol) {
 				y += 17;
 			} else {
-				x += Math.round(textWidthLargest * 1.5) + 26;
+				// use constant
+				x += Math.round(textWidthLargest) + 26 + 26;
 				y = oldY;
 				textWidthLargest = 0;
 			}
@@ -1181,7 +1393,7 @@ function drawBars (ctx, data) {
 		}
 	}
 	for (i = 0; i < data.plots.length; i++) { //draw text and markers *after* the bars, even if they are defined before them
-		if (data.plots[i].type !== 'bar' || data.plots[i].text || data.plots[i].marker) {
+		if (data.plots[i].type !== 'bar' || data.plots[i].text || data.plots[i].mark) {
 			drawMarkerOrText(ctx, data, data.plots[i]);
 		}
 	}
@@ -1197,7 +1409,15 @@ function draw (ctx, data) {
 	drawBars(ctx, data);
 	drawLines1(ctx, data);
 }
-
+function compfunc(a, b) {
+	if (a.bar < b.bar) return -1;
+	if (a.bar > b.bar) return 1;
+	return Number(b.width) - Number(a.width);
+}
+// the plotdata can have different width bars - these need sorting
+function sortPlotdata(data) {
+	data.plots.sort(compfunc);
+}
 /**
  * functions to handle DOM
  */
@@ -1206,6 +1426,7 @@ function draw (ctx, data) {
 function drawOnCanvas (code, canvas) {
 	var data = parseCode(code);
 	data.barNames = getBarNames(data);
+	sortPlotdata(data); // after bar order has been defined
 	data.canvas = getCanvasSize(data);
 	canvas.width = data.canvas.width;
 	canvas.height = data.canvas.height;
@@ -1219,7 +1440,16 @@ function replaceCodeWithCanvas (el) {
 		p = document.createElement('p'),
 		canvas = document.createElement('canvas');
 	p.style.position = 'relative'; //links will be placed with position: 'absolute'
+	p.style.lineHeight = 0;
 	p.appendChild(canvas);
+	// remove spurious <p></p> at beginning and end
+	var x = el.parentNode;
+	var prev = x.previousElementSibling;
+	if (prev && prev.outerHTML === "<p></p>")
+		x.parentElement.removeChild(prev);
+	var next = x.nextElementSibling;
+	if (next && next.outerHTML === "<p></p>")
+		x.parentElement.removeChild(next);
 	el.parentNode.replaceChild(p, el);
 	drawOnCanvas(code, canvas);
 }
