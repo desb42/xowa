@@ -59,8 +59,18 @@ public class Xol_lang_itm implements Gfo_invk {
 	public Xol_lang_itm			Fallback_bry_(byte[] v) {
 		fallback_bry = v;
 		fallback_bry_ary = Fallbacy_bry_ary__bld(v);
-		for (byte[] key : fallback_bry_ary) {
-			fallback_hash.Add_as_key_and_val(String_.new_u8(key));
+		try {
+			for (byte[] key : fallback_bry_ary) {
+				String val = String_.new_u8(key);
+				// NOTE: dupes can happen, b/c fallback works by loading current language, and then loading each fallback's langs to cur language;
+				// EX:
+				// * lang.Load_lang("gl") calls lang.Fallback_bry_ with "pt" (the fallback_lang) and "en" (the default lang)
+				// * then lang.Fallback_bry_ calls lang.Exec_fallback_load("pt") which calls lang.Fallack_bry_ with "pt-br"(the fallback_lang) and "en" (the default lang)
+				fallback_hash.Add_if_dupe_use_1st(val, val);
+			}
+		} catch (Exception exc) {
+			String cur_fallbacks = String_.AryXtoStr((String[])fallback_hash.To_ary(String.class));
+			throw Err_.new_wo_type(String_.Format("failed to add fallback_bry_ary; lang={0} cur_fallbacks={1} new_fallbacks={2} err={3}", key_str, cur_fallbacks, v, Err_.Message_gplx_log(exc)));
 		}
 		return this;
 	}	private byte[] fallback_bry;
