@@ -1262,7 +1262,12 @@ function drawText (ctx, data, text) {
 	if (!match) {
 		return;
 	}
-	drawMultiLineText(ctx, data, text, {x: Number(match[1]), y: data.canvas.height - Number(match[2]), align: 'left', valign: 'bottom'});
+	var posy = Number(match[2]);
+	// if would not show, reduce by one lineheight
+	if (posy == 0) {
+		posy += Number(text.lineheight);
+	}
+	drawMultiLineText(ctx, data, text, {x: Number(match[1]), y: data.canvas.height - posy, align: 'left', valign: 'alphabetic'}); // instead of bottom?
 }
 //draws a horizontl axis line
 function drawAxisLine(ctx, data) {
