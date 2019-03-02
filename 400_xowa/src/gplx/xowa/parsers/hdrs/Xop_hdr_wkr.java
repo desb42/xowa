@@ -43,6 +43,7 @@ public class Xop_hdr_wkr implements Xop_ctx_wkr {
 
 		Xop_hdr_tkn tkn = tkn_mkr.Hdr(bgn_pos, new_pos, hdr_len);	// make tkn
 		ctx.StackTkn_add(root, tkn);
+		new_pos = Bry_find_.Find_fwd_while(src, new_pos, src_len, Byte_ascii.Space); // skip leading space
 		return new_pos;
 	}
 	public int Make_tkn_end(Xop_ctx ctx, Xop_tkn_mkr tkn_mkr, Xop_root_tkn root, byte[] src, int src_len, int bgn_pos, int cur_pos, int stackPos, int end_hdr_len) {// REF.MW: Parser|doHeadings
@@ -79,6 +80,8 @@ public class Xop_hdr_wkr implements Xop_ctx_wkr {
 		cur_pos = Find_fwd_while_ws_hdr_version(src, cur_pos, src_len);
 		ctx.Para().Process_block__bgn_n__end_y(Xop_xnde_tag_.Tag__h2);
 
+		// trim trailing whitespace
+		root.Subs_ignore_whitespace();
 		// add to root tkn; other post-processing
 		hdr.Subs_move(root);
 		hdr.Src_end_(cur_pos);

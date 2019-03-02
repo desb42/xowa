@@ -16,6 +16,7 @@ Apache License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-APACHE2.txt
 package gplx.xowa.parsers; import gplx.*; import gplx.xowa.*;
 import gplx.xowa.parsers.tmpls.*;
 import gplx.xowa.htmls.*; import gplx.xowa.htmls.core.htmls.*;
+import gplx.xowa.parsers.paras.*; import gplx.xowa.parsers.miscs.*;
 public abstract class Xop_tkn_itm_base implements Xop_tkn_itm {
 	public abstract byte Tkn_tid();
 	public Xop_tkn_grp Tkn_grp() {return grp == null ? this : grp;} private Xop_tkn_grp grp;	// NOTE: not sure about this; need to handle null refs when tkns are manipulated but not yet added to a group
@@ -131,6 +132,18 @@ public abstract class Xop_tkn_itm_base implements Xop_tkn_itm {
 	public void Subs_grp_(Xop_ctx ctx, Xop_tkn_itm tkn, Xop_tkn_grp grp, int sub_idx) {
 //			if (tkn.Tkn_immutable()) tkn = Subs_immutable_clone(ctx, tkn);
 //			tkn.Tkn_grp_(grp, sub_idx);
+	}
+	public void Subs_ignore_whitespace() {
+		Xop_tkn_itm sub;
+		while (subs_len >= 0) {
+			sub = subs[subs_len - 1];
+			if (sub instanceof Xop_space_tkn || sub instanceof Xop_para_tkn) {
+				subs[subs_len - 1] = null;
+				subs_len--;
+			}
+			else
+				break;
+		}
 	}
 	@gplx.Virtual public void Reset() {
 		src_bgn = src_end = tkn_sub_idx = -1; ignore = false;  tmpl_static = false;

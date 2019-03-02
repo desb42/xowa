@@ -53,6 +53,7 @@ public class Xop_list_wkr implements Xop_ctx_wkr {
 			Xop_list_tkn prvItm = tkn_mkr.List_bgn(bgn_pos, cur_pos, curSymAry[curSymLen - 1], curSymLen).List_path_(posBldr.XtoIntAry()).List_uid_(listId);
 			ctx.Subs_add_and_stack(root, prvItm);
 			ctx.Empty_ignored_y_();
+			cur_pos = Bry_find_.Find_fwd_while(src, cur_pos, src_len, Byte_ascii.Space); // skip leading space
 		}
 		else {
 			for (int i = prvSymLen; i > commonSymLen; i--) {	// close all discontinued itms: EX: ##\n#\n
@@ -77,6 +78,7 @@ public class Xop_list_wkr implements Xop_ctx_wkr {
 				Xop_list_tkn prvItm = tkn_mkr.List_bgn(bgn_pos, cur_pos, symByt, curSymLen).List_path_(posBldr.XtoIntAry()).List_uid_(listId);
 				ctx.Subs_add_and_stack(root, prvItm);
 				ctx.Empty_ignored_y_();
+				cur_pos = Bry_find_.Find_fwd_while(src, cur_pos, src_len, Byte_ascii.Space); // skip leading space
 			}
 			for (int i = commonSymLen; i < curSymLen; i++) {	// open new itms; EX: #\n##\n
 				posBldr.MoveDown();
@@ -85,6 +87,7 @@ public class Xop_list_wkr implements Xop_ctx_wkr {
 				Xop_list_tkn prvItm = tkn_mkr.List_bgn(bgn_pos, cur_pos, symByt, i + List_adp_.Base1).List_path_(posBldr.XtoIntAry()).List_uid_(listId);
 				ctx.Subs_add_and_stack(root, prvItm);
 				ctx.Empty_ignored_y_();
+				cur_pos = Bry_find_.Find_fwd_while(src, cur_pos, src_len, Byte_ascii.Space); // skip leading space
 			}
 		}
 		if (allDd) { // NOTE: if indent && next == {| then invoke table; EX: ":::{|"
@@ -98,6 +101,8 @@ public class Xop_list_wkr implements Xop_ctx_wkr {
 	public void MakeTkn_end(Xop_ctx ctx, Xop_tkn_mkr tkn_mkr, Xop_root_tkn root, byte[] src, int src_len, int bgn_pos, int cur_pos, Xop_list_tkn bgn, byte sub_last) {
 		// boolean empty_ignored = ctx.Empty_ignored(); // commented; see below; DATE:2014-06-24
 		Xop_tkn_itm end_tkn = tkn_mkr.List_end(bgn_pos, bgn.List_itmTyp()).List_path_(bgn.List_path()).List_uid_(listId).List_sub_last_(sub_last);
+		// trim whitespace
+		root.Subs_ignore_whitespace();
 		ctx.Subs_add(root, end_tkn);
 		// if (empty_ignored) ctx.Empty_ignore(root, bgn.Tkn_sub_idx());	// commented; code was incorrectly deactivating "*a" when "<li>" encountered; PAGE:en.w:Bristol_Bullfinch DATE:2014-06-24
 		ctx.Para().Process_block__bgn_n__end_y(Xop_xnde_tag_.Tag__ul);
