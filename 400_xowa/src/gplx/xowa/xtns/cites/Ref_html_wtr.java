@@ -16,7 +16,7 @@ Apache License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-APACHE2.txt
 package gplx.xowa.xtns.cites; import gplx.*; import gplx.xowa.*; import gplx.xowa.xtns.*;
 import gplx.core.brys.*; import gplx.core.brys.fmtrs.*; import gplx.core.brys.args.*;
 import gplx.xowa.htmls.*; import gplx.xowa.htmls.core.htmls.*;
-import gplx.xowa.parsers.*; import gplx.xowa.parsers.xndes.*;
+import gplx.xowa.parsers.*; import gplx.xowa.parsers.xndes.*; import gplx.core.intls.*; import gplx.xowa.*;
 public class Ref_html_wtr {
 	private final    Xoh_ref_list_fmtr grp_list_fmtr = new Xoh_ref_list_fmtr();
 	private final    Bfr_arg__bry_fmtr grp_key_fmtr = Bfr_arg_.New_bry_fmtr__null(), itm_id_fmtr = Bfr_arg_.New_bry_fmtr__null(), grp_id_fmtr = Bfr_arg_.New_bry_fmtr__null();
@@ -32,9 +32,10 @@ public class Ref_html_wtr {
 		cfg.Itm_html().Bld_bfr_many(bfr
 			, Itm_id(itm, true)
 			, Grp_id(itm)
-			, itm_group_is_default
+                        , make_counter(itm)
+			/*, itm_group_is_default
 			? itm.Idx_major() + 1
-			: (Object)grp_key_fmtr.Set(cfg.Itm_grp_text(), itm.Group(), itm.Idx_major() + 1)
+			: (Object)grp_key_fmtr.Set(cfg.Itm_grp_text(), itm.Group(), itm.Idx_major() + 1)*/
 			);
 	}
 	public Ref_html_wtr_cfg Cfg() {return cfg;} private Ref_html_wtr_cfg cfg;
@@ -70,6 +71,7 @@ public class Ref_html_wtr {
 		Ref_itm_lst lst = wpg.Ref_mgr().Lst_get(references.Group(), references.List_idx());	// get group; EX: <references group="note"/>
 		if (lst == null) return;	// NOTE: possible to have a grouped references without references; EX: Infobox planet; <references group=note> in sidebar, but no refs 
 		if (lst.Itms_len() == 0) return;
+		bfr.Add(Bry_.new_a7("<div class=\"mw-references-wrap\">")); // sometimes the other - why??
 		bfr.Add(cfg.Grp_bgn());
 		int itms_len = lst.Itms_len();
 		for (int j = 0; j < itms_len; j++) {	// iterate over itms in grp
@@ -107,5 +109,38 @@ public class Ref_html_wtr {
 			}
 		}
 		bfr.Add(cfg.Grp_end());
+		bfr.Add(Bry_.new_a7("</div>\n"));
+	}
+	private static byte[] GN_decimal = Bry_.new_a7("decimal")
+	, GN_upper_alpha = Bry_.new_a7("upper-alpha")
+	, GN_lower_alpha = Bry_.new_a7("lower-alpha")
+	, GN_upper_latin = Bry_.new_a7("upper-latin")
+	, GN_lower_latin = Bry_.new_a7("lower-latin")
+	, GN_upper_roman = Bry_.new_a7("upper-roman")
+	, GN_lower_roman = Bry_.new_a7("lower-roman")
+	, GN_lower_greek = Bry_.new_a7("lower-greek")
+	;
+	public Object make_counter(Ref_nde itm) {
+		Bry_bfr tmp_bfr = Bry_bfr_.New();
+		int n = itm.Idx_major() + 1;
+		if (Bry_.Eq(itm.Group(), Bry_.Empty) || Bry_.Eq(itm.Group(), GN_decimal))
+			tmp_bfr.Add_int_variable(n);
+		else if (Bry_.Eq(itm.Group(), GN_upper_alpha) || Bry_.Eq(itm.Group(), GN_upper_latin)) {
+			n  = (n % 26) + 97 - 1 - 32;
+			tmp_bfr.Add_byte((byte)n);
+		}
+			else if (Bry_.Eq(itm.Group(), GN_lower_alpha) || Bry_.Eq(itm.Group(), GN_lower_latin)) {
+			n  = (n % 26) + 'a' - 1;
+			tmp_bfr.Add_byte((byte)n);
+		}
+		else if (Bry_.Eq(itm.Group(), GN_upper_roman))
+			Pfxtp_roman.ToRoman(n, tmp_bfr, false);
+		else if (Bry_.Eq(itm.Group(), GN_lower_roman))
+			Pfxtp_roman.ToRoman(n, tmp_bfr, true);
+		else if (Bry_.Eq(itm.Group(), GN_lower_greek))
+			tmp_bfr.Add(gplx.core.intls.Utf16_.Encode_int_to_bry(n % 24 + 944));
+		else
+			return grp_key_fmtr.Set(cfg.Itm_grp_text(), itm.Group(), itm.Idx_major() + 1);
+		return tmp_bfr.To_bry_and_clear_and_rls();
 	}
 }

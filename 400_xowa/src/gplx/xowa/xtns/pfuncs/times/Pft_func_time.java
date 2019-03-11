@@ -64,32 +64,3 @@ class DateAdpTranslator_xapp {
 			bb.Add(itm_val);
 	}
 }
-class Pfxtp_roman {
-	public static void ToRoman(int num, Bry_bfr bfr) {
-		if (num > 3000 || num <= 0) {
-			bfr.Add_int_variable(num);
-			return;
-		}
-		int pow10 = 1000;
-		for (int i = 3; i > -1; i--) {
-			if (num >= pow10) {
-				bfr.Add(Names[i][Math_.Trunc(num / pow10)]);
-			}
-			num %= pow10;
-			pow10 /= 10;
-		} 
-	}
-	private static byte[][][] Names = new byte[][][]
-		{ Bry_dim2_new_("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X")
-		, Bry_dim2_new_("", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC", "C")
-		, Bry_dim2_new_("", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM", "M")
-		, Bry_dim2_new_("", "M", "MM", "MMM")
-		};
-	private static byte[][] Bry_dim2_new_(String... names) {
-		int len = names.length;
-		byte[][] rv = new byte[len][];
-		for (int i = 0; i < len; i++)
-			rv[i] = Bry_.new_u8(names[i]);
-		return rv;
-	}
-}
