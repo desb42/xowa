@@ -18,9 +18,9 @@ import gplx.core.brys.fmtrs.*;
 public class Imap_html_fmtrs {
 	public static final    Bry_fmtr
 	  All = Bry_fmtr.new_(String_.Concat_lines_nl_skip_last
-	( "<div id=\"imap_div_~{imap_id}\" class=\"noresize\"~{desc_style}>~{map}~{img}"
+	( "<div~{imap_im} class=\"noresize\"~{desc_style}>~{map}~{img}"
 	, "    </div>"
-	), "imap_id", "desc_style", "map", "img"
+	), "imap_im", "desc_style", "map", "img"
 	)
 	, Map = Bry_fmtr.new_(String_.Concat_lines_nl_skip_last
 	( ""
@@ -33,23 +33,25 @@ public class Imap_html_fmtrs {
 	), "href", "shape", "coords", "title")
 	, Img_anchor_none = Bry_fmtr.new_(String_.Concat_lines_nl_skip_last
 	( ""
-	, "      <img id=\"xoimg_~{img_elem_id}\" alt=\"~{img_alt}\"~{img_core}~{img_cls} usemap=\"#imageMap_1_~{imap_id}\"/>"
-	), "imap_id", "img_elem_id", "img_alt", "img_core", "img_cls", "anchor_href", "anchor_title"
+	, "      <img id=\"xoimg_~{img_elem_id}\" alt=\"~{img_alt}\"~{img_core}~{img_cls}~{imap_um}/>"
+	), "imap_um", "img_elem_id", "img_alt", "img_core", "img_cls", "anchor_href", "anchor_title"
 	)
 	, Img_anchor_lnki = Bry_fmtr.new_(String_.Concat_lines_nl_skip_last
 	( ""
 	, "      <a href=\"~{anchor_href}\" title=\"~{anchor_title}\">"
-	, "        <img id=\"xoimg_~{img_elem_id}\" alt=\"~{img_alt}\"~{img_core}~{img_cls} usemap=\"#imageMap_1_~{imap_id}\"/>"
+	, "        <img id=\"xoimg_~{img_elem_id}\" alt=\"~{img_alt}\"~{img_core}~{img_cls}~{imap_um}/>"
 	, "      </a>"
-	), "imap_id", "img_elem_id", "img_alt", "img_core", "img_cls", "anchor_href", "anchor_title"
+	), "imap_um", "img_elem_id", "img_alt", "img_core", "img_cls", "anchor_href", "anchor_title"
 	)
 	, Img_anchor_lnke = Bry_fmtr.new_(String_.Concat_lines_nl_skip_last
 	( ""
 	, "      <a href=\"~{anchor_href}\" title=~{anchor_title} class=\"plainlinks\" rel=\"nofollow\">"
-	, "        <img id=\"xoimg_~{img_elem_id}\" alt=\"~{img_alt}\"~{img_core}~{img_cls} usemap=\"#imageMap_1_~{imap_id}\"/>"
+	, "        <img id=\"xoimg_~{img_elem_id}\" alt=\"~{img_alt}\"~{img_core}~{img_cls}~{imap_um}/>"
 	, "      </a>"
-	), "imap_id", "img_elem_id", "img_alt", "img_core", "img_cls", "anchor_href", "anchor_title"
+	), "imap_um", "img_elem_id", "img_alt", "img_core", "img_cls", "anchor_href", "anchor_title"
 	)
+	, Img_imap = Bry_fmtr.new_(" id=\"imap_div_~{imap_id}\"", "imap_id")
+	, Img_usemap = Bry_fmtr.new_(" usemap=\"#imageMap_1_~{imap_id}\"", "imap_id")
 	, Desc_style = Bry_fmtr.new_(" style=\"height:~{div_h}px; width: ~{div_w}px;\"", "div_w", "div_h")
 	, Desc_main = Bry_fmtr.new_(String_.Concat_lines_nl_skip_last
 	( ""

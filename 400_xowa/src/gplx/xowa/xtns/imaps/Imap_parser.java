@@ -47,6 +47,8 @@ public class Imap_parser {
 		return rv;
 	}
 	public void Parse(Imap_map rv, byte[] src, int src_bgn, int src_end) {
+		boolean desc_not_checked = true;
+		Btrie_slim_mgr trie = xtn_mgr.Desc_trie();
 		this.Clear();
 		this.src = src;
 		itm_bgn = src_bgn; itm_end = src_bgn - 1;
@@ -71,7 +73,7 @@ public class Imap_parser {
 					byte tid_val = tid_obj == null ? Imap_part_.Tid_invalid : ((Byte_obj_val)tid_obj).Val();
 					int tid_end_pos = trv.Pos();
 					switch (tid_val) {
-						case Imap_part_.Tid_desc:			Parse_desc(tid_end_pos, itm_end); break;
+						case Imap_part_.Tid_desc:			Parse_desc(tid_end_pos, itm_end, trie); desc_not_checked = false; break;
 						case Imap_part_.Tid_dflt:			Parse_dflt(tid_end_pos, itm_end); break;
 						case Imap_part_.Tid_shape_rect:		Parse_shape(tid_val, tid_end_pos, itm_bgn, itm_end, 4); break;
 						case Imap_part_.Tid_shape_poly:		Parse_shape(tid_val, tid_end_pos, itm_bgn, itm_end, Reqd_poly); break;
@@ -83,20 +85,25 @@ public class Imap_parser {
 			} catch (Exception e) {usr_dlg.Warn_many("", "", "imap.parse:skipping line; page=~{0} line=~{1} err=~{2}", page_url.To_str(), Bry_.Mid_safe(src, itm_bgn, itm_end), Err_.Message_gplx_log(e));}
 			++itm_idx;
 		}
+		if (desc_not_checked) {
+			Check_desc(Imap_desc_tid.Tid_br);
+		}
 		rv.Init(xtn_mgr, imap_img_src, imap_img, imap_dflt, imap_desc, (Imap_part_shape[])shapes.To_ary_and_clear(Imap_part_shape.class), (Imap_err[])errs.To_ary_and_clear(Imap_err.class));
 	}
 	private void Parse_comment(int itm_bgn, int itm_end) {}	// noop comments; EX: "# comment\n"
 	private void Parse_invalid(int itm_bgn, int itm_end) {usr_dlg.Warn_many("", "", "imap has invalid line: page=~{0} line=~{1}", page_url.To_str(), String_.new_u8(src, itm_bgn, itm_end));}
-	private boolean Parse_desc(int itm_bgn, int itm_end) {
-		Btrie_slim_mgr trie = xtn_mgr.Desc_trie();
+	private boolean Parse_desc(int itm_bgn, int itm_end, Btrie_slim_mgr trie) {
 		byte tid_desc = Imap_desc_tid.Parse_to_tid(trie, src, Bry_find_.Trim_fwd_space_tab(src, itm_bgn, itm_end), Bry_find_.Trim_bwd_space_tab(src, itm_end, itm_bgn));
 		switch (tid_desc) {
 			case Imap_desc_tid.Tid_null: return Add_err(Bool_.N, itm_bgn, itm_end, "imagemap_invalid_coord");
 			case Imap_desc_tid.Tid_none: return true;
 		}
-		if (imap_img == null || imap_img.Img_link().Lnki_type() == Xop_lnki_type.Id_thumb) return true;	// thumbs don't get desc
-		imap_desc = new Imap_part_desc(tid_desc);
+		Check_desc(tid_desc);
 		return true;
+	}
+	private void Check_desc(byte tid_desc) {
+		if (imap_img == null || imap_img.Img_link().Lnki_type() == Xop_lnki_type.Id_thumb) return;	// thumbs don't get desc
+		imap_desc = new Imap_part_desc(tid_desc);
 	}
 	private void Parse_dflt(int itm_bgn, int itm_end) {
 		imap_dflt = new Imap_part_dflt();

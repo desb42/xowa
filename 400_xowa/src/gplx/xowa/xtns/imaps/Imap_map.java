@@ -32,6 +32,7 @@ public class Imap_map implements Xoh_file_fmtr, Js_img_wkr {
 	public Imap_part_shape[]	Shapes()		{return shapes;}		private Imap_part_shape[] shapes;
 	public Imap_err[]			Errs()			{return errs;}			private Imap_err[] errs;
 	public boolean					Invalid()		{return img == null;}	// invalid if missing image; PAGE:en.w:Wikipedia:WikiProject_Games/Advert EX: <imagemap>|thumb;</imagemap>; DATE:2014-08-12
+	public byte[]		Imap_um()		{return imap_um;}			private byte[] imap_um;
 
 	public void Add_full_img(Bry_bfr tmp_bfr, Xoh_wtr_ctx hctx, Xoae_page page, byte[] src, Xof_file_itm xfer_itm, int uid
 		, byte[] a_href, boolean a_href_is_file, byte a_cls, byte a_rel, byte[] a_title, byte[] a_xowa_title
@@ -62,9 +63,26 @@ public class Imap_map implements Xoh_file_fmtr, Js_img_wkr {
 		} finally {tmp_bfr.Mkr_rls();}
 	}
 	private void Write_imap_div(Bry_bfr bfr, Xoh_wtr_ctx hctx, int html_uid, int html_w, int html_h, byte[] img_src, boolean orig_exists, int orig_w, int orig_h, byte[] lnki_ttl) {
-		Imap_map_arg map_arg = new Imap_map_arg(id, shapes, Calc_scale(orig_w, orig_h, html_w, html_h));
+		byte[] imap_im = null;
+		this.imap_um = null;
+		Imap_map_arg map_arg = null;
+		if (shapes.length > 0) {
+			imap_im = Gen_imap_im(html_uid);
+			this.imap_um = Gen_imap_um(html_uid);
+			map_arg = new Imap_map_arg(id, shapes, Calc_scale(orig_w, orig_h, html_w, html_h));
+		}
 		Imap_img_arg img_arg = new Imap_img_arg(hctx, xtn_mgr, this, html_uid, img_alt, img_src, html_w, html_h, Xoh_img_cls_.To_html(img_cls_tid, img_cls_other), a_href, lnki_ttl, orig_exists);
-		Imap_html_fmtrs.All.Bld_bfr_many(bfr, html_uid, Calc_desc_style(desc, html_w, html_h), map_arg, img_arg);
+		Imap_html_fmtrs.All.Bld_bfr_many(bfr, imap_im, Calc_desc_style(desc, html_w, html_h), map_arg, img_arg);
+	}
+	private static byte[] Gen_imap_im(int id) {
+		Bry_bfr tmp_bfr = Bry_bfr_.Get();
+		try		{return Imap_html_fmtrs.Img_imap.Bld_bry_many(tmp_bfr, id);}
+		finally {tmp_bfr.Mkr_rls();}
+	}
+	private static byte[] Gen_imap_um(int id) {
+		Bry_bfr tmp_bfr = Bry_bfr_.Get();
+		try		{return Imap_html_fmtrs.Img_usemap.Bld_bry_many(tmp_bfr, id);}
+		finally {tmp_bfr.Mkr_rls();}
 	}
 	private static byte[] Calc_desc_style(Imap_part_desc desc, int html_w, int html_h) {
 		if (desc == null) return Bry_.Empty;

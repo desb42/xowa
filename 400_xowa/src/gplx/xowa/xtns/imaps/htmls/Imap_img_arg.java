@@ -65,7 +65,7 @@ public class Imap_img_arg implements gplx.core.brys.Bfr_arg {
 				anchor_href = itm_dflt.Link_href();
 				anchor_text = itm_dflt.Link_text();
 			}
-			fmtr.Bld_bfr_many(bfr, map.Id(), img_elem_id, img_alt, img_core_fmtr, img_cls, anchor_href, anchor_text);
+			fmtr.Bld_bfr_many(bfr, map.Imap_um(), img_elem_id, img_alt, img_core_fmtr, img_cls, anchor_href, anchor_text);
 		}
 		Imap_part_desc itm_desc = map.Desc();
 		if (itm_desc != null) {
