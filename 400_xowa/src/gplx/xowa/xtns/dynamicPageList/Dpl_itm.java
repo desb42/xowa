@@ -37,6 +37,7 @@ class Dpl_itm {
 	public byte[] Gallery_caption() {return gallery_caption;} private byte[] gallery_caption;
 	public byte Redirects_mode() {return redirects_mode;} private byte redirects_mode = Dpl_redirect.Tid_unknown;
 	public byte Sort_tid() {return sort_tid;} private byte sort_tid = Dpl_sort.Tid_categoryadd;
+	public byte Mode_tid() {return mode_tid;} private byte mode_tid = Dpl_itm_keys.Key_unordered;
 	public byte Quality_pages() {return quality_pages;} private byte quality_pages;
 	public byte Stable_pages() {return stable_pages;} private byte stable_pages;
 	private Xop_ctx sub_ctx; private Xop_tkn_mkr sub_tkn_mkr; private Xop_root_tkn sub_root;
@@ -85,7 +86,7 @@ class Dpl_itm {
 						if (ws_bgn_idx != -1) fld_bgn = ws_bgn_idx + 1;	// +1 to position after last known ws
 						int fld_end = ws_end_idx == -1 ? pos : ws_end_idx;
 						byte[] val = Bry_.Mid(src, fld_bgn, fld_end);
-						Parse_cmd(wiki, key_id, val);
+						Parse_cmd(wiki, key_id, val, usr_dlg, page_ttl);
 					}
 					fld_bgn = pos + Byte_ascii.Len_1;
 					ws_bgn_chk = true; ws_bgn_idx = ws_end_idx = -1;
@@ -99,7 +100,7 @@ class Dpl_itm {
 			++pos;
 		}
 	}
-	public void Parse_cmd(Xowe_wiki wiki, byte key_id, byte[] val) {
+	public void Parse_cmd(Xowe_wiki wiki, byte key_id, byte[] val, Gfo_usr_dlg usr_dlg, byte[] page_ttl) {
 		sub_root.Clear();
 		val = wiki.Parser_mgr().Main().Expand_tmpl(sub_root, sub_ctx, sub_tkn_mkr, val);
 		switch (key_id) {
@@ -123,7 +124,20 @@ class Dpl_itm {
 			case Dpl_itm_keys.Key_galleryshowfilesize:	gallery_filesize = Dpl_itm_keys.Parse_as_bool(val, true); break;
 			case Dpl_itm_keys.Key_galleryshowfilename:	gallery_filename = Dpl_itm_keys.Parse_as_bool(val, true); break;
 			case Dpl_itm_keys.Key_ordermethod:			sort_tid = Dpl_sort.Parse_ordermethod(val); break;
+			case Dpl_itm_keys.Key_mode:			mode_tid = Parse_mode(val, usr_dlg, page_ttl); break;
+			default:
+				String err_msg = String_.Format("dynamic_page_list:unknown_keyword: page={0} keyword={1}", String_.new_u8(page_ttl), key_id);
+				usr_dlg.Log_many("", "", err_msg);
 		}
+	}
+	private byte Parse_mode(byte[] val, Gfo_usr_dlg usr_dlg, byte[] page_ttl) {
+		byte val_key = Dpl_itm_keys.Parse(val, Dpl_itm_keys.Key_categoryadd);
+		if (val_key == Dpl_itm_keys.Key_ordered || val_key == Dpl_itm_keys.Key_unordered) {
+			return val_key;
+		}
+		String err_msg = String_.Format("dynamic_page_list:unknown_mode: page={0} mode={1}", String_.new_u8(page_ttl), String_.new_u8(val));
+		usr_dlg.Log_many("", "", err_msg);
+		return Dpl_itm_keys.Key_unordered;
 	}
 	private void Parse_ctg_date(byte[] val) {
 //			byte val_key = Keys_get_or(val, Dpl_itm_keys.Key_false);
