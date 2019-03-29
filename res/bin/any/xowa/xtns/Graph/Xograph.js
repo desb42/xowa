@@ -85,7 +85,7 @@ xo.xtns.graph = new function() {
   {
     if (version == 1)
     {
-      vg.parse.spec
+      vg1.parse.spec
       ( data
       , function (chart) 
         {

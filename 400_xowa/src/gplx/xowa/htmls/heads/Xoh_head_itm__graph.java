@@ -36,6 +36,8 @@ public class Xoh_head_itm__graph extends Xoh_head_itm__base {
 		Xopg_tag_wtr_.Add__xologger(tags, http_root);
 		Xopg_tag_wtr_.Add__xolog(tags, http_root, false);
 		Xopg_tag_wtr_.Add__xoajax(tags, http_root, app);
+		if (!version_is_1 && !version_is_2)
+			version_is_2 = true; // no version - set to v2
 		Add__xograph(tags, http_root, page, version_is_1, version_is_2);
 
 		// write tags
@@ -67,8 +69,8 @@ public class Xoh_head_itm__graph extends Xoh_head_itm__base {
 			tags.Add(Xopg_tag_itm.New_js_file(xtn_dir.GenSubFil_nest("lib", "graph2.compiled.js")));
 			tags.Add(Xopg_tag_itm.New_js_file(xtn_dir.GenSubFil_nest("modules", "graph2.js")));
 		}
-		else {
-			tags.Add(Xopg_tag_itm.New_js_file(xtn_dir.GenSubFil_nest("lib", "vega1", "vega.js")));
+		if (version_is_1) {
+			tags.Add(Xopg_tag_itm.New_js_file(xtn_dir.GenSubFil_nest("lib", "vega1", "vega_x.js")));
 		}
 		tags.Add(Xopg_tag_itm.New_js_file(xtn_dir.GenSubFil_nest("Xograph.js")));
 	}

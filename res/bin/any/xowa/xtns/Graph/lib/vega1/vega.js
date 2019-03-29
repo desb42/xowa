@@ -11,7 +11,7 @@
     // NOTE: Pass dependencies to factory function
     // (assume that both d3 and topojson are also global.)
     var tj = (typeof topojson === 'undefined') ? null : topojson;
-    vg = factory(d3, tj);
+    vg1 = factory(d3, tj);
   }
 }(
 //NOTE: The dependencies are passed to this function
