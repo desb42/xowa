@@ -23,6 +23,18 @@ import gplx.xowa.apps.gfs.*; import gplx.xowa.htmls.portal.*;
 import gplx.xowa.addons.wikis.ctgs.htmls.pageboxs.*;
 import gplx.xowa.htmls.core.*;
 import gplx.xowa.xtns.pfuncs.times.*;
+
+import gplx.xowa.htmls.core.htmls.html5depurate.*;
+import nu.validator.htmlparser.common.XmlViolationPolicy;
+import nu.validator.htmlparser.sax.HtmlParser;
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.ContentHandler;
+
 public class Xoh_page_wtr_wkr {
 	private final    Object thread_lock_1 = new Object(), thread_lock_2 = new Object();
 	private final    Bry_bfr tmp_bfr = Bry_bfr_.Reset(255); 
@@ -204,11 +216,19 @@ public class Xoh_page_wtr_wkr {
 		// if (ns_id == Xow_ns_.Tid__category) wiki.Ctg__catpage_mgr().Write_catpage(tidy_bfr, page, hctx);
 
 		// tidy html
-		if (ns_id != Xow_ns_.Tid__special) // skip Special b/c
-			wiki.Html_mgr().Tidy_mgr().Exec_tidy(tidy_bfr, !hctx.Mode_is_hdump(), page.Url_bry_safe());
+		//if (ns_id != Xow_ns_.Tid__special) // skip Special b/c
+		//	wiki.Html_mgr().Tidy_mgr().Exec_tidy(tidy_bfr, !hctx.Mode_is_hdump(), page.Url_bry_safe());
 		
 		// add back to main bfr
-		bfr.Add_bfr_and_clear(tidy_bfr);
+		//bfr.Add_bfr_and_clear(tidy_bfr);
+
+		try {
+			bfr.Add(depurate(tidy_bfr, true));
+			wiki.Html_mgr().Tidy_mgr().Tidy_unwrap(bfr);
+		} 
+		catch (SAXException e) { }
+		catch (IOException e) {}
+
 		} finally {
 			tidy_bfr.Mkr_rls();
 		}
@@ -258,4 +278,20 @@ public class Xoh_page_wtr_wkr {
 	}
 	private static final    byte[] Key_lastmodifiedat = Bry_.new_a7("lastmodifiedat");
 	
+	private byte[] depurate(Bry_bfr tidy_bfr, boolean compat)
+		throws SAXException, IOException
+		{
+			byte[] input = tidy_bfr.To_bry_and_clear();
+			InputStream stream = new ByteArrayInputStream(input);
+			InputSource source = new InputSource(stream);
+			ByteArrayOutputStream sink = new ByteArrayOutputStream();
+			ContentHandler serializer;
+			serializer = new CompatibilitySerializer(sink);
+			HtmlParser parser = new HtmlParser(XmlViolationPolicy.ALLOW);
+			parser.setContentHandler(serializer);
+			parser.setProperty("http://xml.org/sax/properties/lexical-handler",
+					serializer);
+			parser.parse(source);
+			return sink.toByteArray();
+	}
 }
