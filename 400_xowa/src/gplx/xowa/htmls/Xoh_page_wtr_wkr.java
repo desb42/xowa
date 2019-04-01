@@ -284,6 +284,7 @@ public class Xoh_page_wtr_wkr {
 			byte[] input = tidy_bfr.To_bry_and_clear();
 			InputStream stream = new ByteArrayInputStream(input);
 			InputSource source = new InputSource(stream);
+			source.setEncoding("UTF-8");
 			ByteArrayOutputStream sink = new ByteArrayOutputStream();
 			ContentHandler serializer;
 			serializer = new CompatibilitySerializer(sink);
