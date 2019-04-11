@@ -78,8 +78,9 @@ class Xoh_toc_htmlr implements gplx.core.brys.Bfr_arg {
 	private final    Bry_fmt 
 	  fmtr_div = Bry_fmt.Auto(String_.Concat_lines_nl_skip_last
 	( "<div~{toc}>"
-	, "  <div id=\"toctitle\" class=\"toctitle\">"
-	, "    <h2>~{contents_title}</h2>"
+	, "<input type=\"checkbox\" role=\"button\" id=\"toctogglecheckbox\" class=\"toctogglecheckbox\" style=\"display:none\" />"
+	, "<div class=\"toctitle\">"
+	, "<h2>~{contents_title}</h2><span class=\"toctogglespan\"><label class=\"toctogglelabel\" for=\"toctogglecheckbox\"></label></span>"
 	, "  </div>"
 	, "~{itms}</div>"
 	, ""
