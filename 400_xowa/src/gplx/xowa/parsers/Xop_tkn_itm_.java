@@ -70,6 +70,7 @@ public class Xop_tkn_itm_ {
 , Tid_cr = 50
 , Tid_escape = 51
 , Tid_uniq = 52
+, Tid_list_new = 53
 ;
 public static final    String[] Tid__names
 = new String[]
@@ -126,5 +127,6 @@ public static final    String[] Tid__names
 , "cr"
 , "escape"
 , "uniq"
+, "list_new"
 };
 }

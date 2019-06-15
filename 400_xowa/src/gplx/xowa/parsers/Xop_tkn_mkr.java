@@ -18,6 +18,7 @@ import gplx.langs.htmls.entitys.*;
 import gplx.xowa.parsers.apos.*; import gplx.xowa.parsers.amps.*; import gplx.xowa.parsers.lnkes.*; import gplx.xowa.parsers.hdrs.*; import gplx.xowa.parsers.lists.*; import gplx.xowa.parsers.tblws.*;
 import gplx.xowa.parsers.paras.*; import gplx.xowa.parsers.xndes.*; import gplx.xowa.parsers.lnkis.*; import gplx.xowa.parsers.tmpls.*; import gplx.xowa.parsers.miscs.*; import gplx.xowa.parsers.vnts.*; import gplx.xowa.xtns.cites.*; 
 public class Xop_tkn_mkr {
+	public Xop_list_tkn_new Prev_list_tkn() { return prev_list_tkn; } public void Prev_list_tkn_(Xop_list_tkn_new prev_list_tkn) { this.prev_list_tkn = prev_list_tkn; } private Xop_list_tkn_new prev_list_tkn;
 	public Xop_root_tkn Root(byte[] raw)													{return new Xop_root_tkn().Root_src_(raw);}
 	public Xop_txt_tkn Txt(int bgn, int end)												{return new Xop_txt_tkn(bgn, end);}
 	public Xop_space_tkn Space(Xop_tkn_grp grp, int bgn, int end)							{Xop_space_tkn rv = new Xop_space_tkn(false, bgn, end); grp.Subs_src_pos_(grp.Subs_len(), bgn, end); return rv;}
