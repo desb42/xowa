@@ -18,7 +18,7 @@ import org.junit.*; import gplx.core.tests.*;
 import gplx.xowa.mediawiki.includes.parsers.*; import gplx.xowa.mediawiki.includes.parsers.lnkis.*;
 import gplx.xowa.mediawiki.includes.filerepo.*; import gplx.xowa.mediawiki.includes.filerepo.file.*;
 import gplx.xowa.mediawiki.languages.*;
-public class XomwImageHandlerTest {
+public class XomwImageHandler_tst {
 	private final    XomwImageHandler_fxt fxt = new XomwImageHandler_fxt();
 	@Before public void init() {
 		fxt.Init__file("A.png", 400, 200);
@@ -31,7 +31,7 @@ public class XomwImageHandlerTest {
 class XomwImageHandler_fxt {
 	private final    XomwImageHandler handler;
 	private final    XomwFileRepo repo = new XomwFileRepo(Bry_.new_a7("/orig"), Bry_.new_a7("/thumb"));
-	private final    XomwEnv env = XomwEnv.NewTest();
+	private final    XomwEnv env = XomwEnv_fxt.NewTest();
 	private XomwFile file;
 	public XomwImageHandler_fxt() {
 		this.handler = new XomwTransformationalImageHandler(Bry_.new_a7("test_handler"));
