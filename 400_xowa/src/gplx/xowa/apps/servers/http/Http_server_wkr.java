@@ -144,23 +144,9 @@ class Http_server_wkr implements Gfo_invk {
 		page_html = String_.Replace(page_html, " href='/wiki/"	, " href='/" + wiki_domain + "/wiki/");
 		page_html = String_.Replace(page_html, "action=\"/wiki/"	, "action=\"/" + wiki_domain + "/wiki/");
 		page_html = String_.Replace(page_html, "/site"				, "");
-		page_html = filelink(page_html, wiki_domain);
+		page_html = page_html.replaceAll("\"file\\:.*?/" + wiki_domain.replaceAll("\\.", "\\\\.") + "/", "\"/fsys/file/" + wiki_domain + "/");
+		page_html = page_html.replaceAll("\"file\\:.*?/commons\\.wikimedia\\.org/", "\"/fsys/file/commons.wikimedia.org/");
 		return page_html;
-	}
-	private static String filelink(String html, String wiki_domain)
-	{
-		String typ;
-		String rep;
-		String ptn = "\"file\\:.*?/" + wiki_domain.replaceAll("\\.", "\\\\.") + "/";
-		Pattern p = Pattern.compile(ptn);
-		Matcher m = p.matcher(html);
-		StringBuffer sb = new StringBuffer();
-		while (m.find())
-		{
-			m.appendReplacement(sb, "/" + wiki_domain + "/");
-		}
-		m.appendTail(sb);
-		return sb.toString();
 	}
 	public Object Invk(GfsCtx ctx, int ikey, String k, GfoMsg m) {
 		if		(ctx.Match(k, Invk_run)) {this.Run();}
