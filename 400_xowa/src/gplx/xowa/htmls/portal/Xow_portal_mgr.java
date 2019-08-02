@@ -64,10 +64,7 @@ public class Xow_portal_mgr implements Gfo_invk {
 		Bry_bfr tmp_bfr = wiki.Utl__bfr_mkr().Get_b512();
 		Init_fmtr(tmp_bfr, eval_mgr, div_view_fmtr);
 		Init_fmtr(tmp_bfr, eval_mgr, div_ns_fmtr);
-		byte[] wiki_user_name = wiki.User().Name();
                 
-		byte[] pagetype = wiki.Is_Html_page() ? htmlpage : wikipage;
-		div_personal_bry = Init_fmtr(tmp_bfr, eval_mgr, div_personal_fmtr, Bry_.Add(Xoh_href_.Bry__wiki, wiki.Ns_mgr().Ids_get_or_null(Xow_ns_.Tid__user).Name_db_w_colon(), wiki_user_name), wiki_user_name, Ns_cls_by_id(wiki.Ns_mgr(), Xow_ns_.Tid__user), Bry_.Add(Xoh_href_.Bry__wiki, wiki.Ns_mgr().Ids_get_or_null(Xow_ns_.Tid__user_talk).Name_db_w_colon(), wiki_user_name), Ns_cls_by_id(wiki.Ns_mgr(), Xow_ns_.Tid__user_talk), pagetype);
 		byte[] main_page_href_bry = tmp_bfr.Add(Xoh_href_.Bry__site).Add(wiki.Domain_bry()).Add(Xoh_href_.Bry__wiki).To_bry_and_clear();	// NOTE: build /site/en.wikipedia.org/wiki/ href; no Main_Page, as that will be inserted by Xoh_href_parser
 
 		// logo
@@ -100,7 +97,15 @@ public class Xow_portal_mgr implements Gfo_invk {
 		return div_footer_bry;
 	}
 
-	public byte[] Div_personal_bry() {return div_personal_bry;} private byte[] div_personal_bry = Bry_.Empty;
+	private byte[] div_personal_bry = Bry_.Empty;
+	public byte[] Div_personal_bry() {
+		Bry_bfr tmp_bfr = Bry_bfr_.New();
+		byte[] wiki_user_name = wiki.User().Name();
+		byte[] pagetype = wiki.Is_Html_page() ? htmlpage : wikipage;
+		div_personal_bry = Init_fmtr(tmp_bfr, wiki.Eval_mgr(), div_personal_fmtr, Bry_.Add(Xoh_href_.Bry__wiki, wiki.Ns_mgr().Ids_get_or_null(Xow_ns_.Tid__user).Name_db_w_colon(), wiki_user_name), wiki_user_name, Ns_cls_by_id(wiki.Ns_mgr(), Xow_ns_.Tid__user), Bry_.Add(Xoh_href_.Bry__wiki, wiki.Ns_mgr().Ids_get_or_null(Xow_ns_.Tid__user_talk).Name_db_w_colon(), wiki_user_name), Ns_cls_by_id(wiki.Ns_mgr(), Xow_ns_.Tid__user_talk), pagetype);
+		return div_personal_bry;
+	}
+
 	public byte[] Div_ns_bry(Xowe_wiki wiki, Xoa_ttl ttl) {
 		Bry_bfr_mkr bfr_mkr = wiki.Utl__bfr_mkr();
 		Xow_ns_mgr ns_mgr = wiki.Ns_mgr();
