@@ -33,6 +33,7 @@ public class Xowe_page_mgr {
 		Wait_for_popups(wiki.App());
 		Xowe_wiki_.Rls_mem_if_needed(wiki);
 
+		wiki.Is_html_page_(false);
 		// handle curid query_arg; EX:en.wikipedia.org/wiki/?curid=303 DATE:2017-02-15
 		Gfo_qarg_itm[] qarg_ary = url.Qargs_ary();
 		// if qargs exist...
@@ -73,7 +74,6 @@ public class Xowe_page_mgr {
 			page = wiki.Data_mgr().Load_page_and_parse(url, ttl, wiki.Lang(), tab, false);
 		}
 
-                wiki.Is_html_page_(false);
 		// load from html_db
 		boolean from_html_db = page.Db().Page().Html_db_id() != -1;
 		boolean read_from_html_db_preferred = wiki.Html__hdump_mgr().Load_mgr().Read_preferred();
