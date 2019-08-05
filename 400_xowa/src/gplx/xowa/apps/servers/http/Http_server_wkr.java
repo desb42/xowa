@@ -19,7 +19,7 @@ import gplx.core.primitives.*; import gplx.core.net.*; import gplx.langs.htmls.e
 import gplx.xowa.apps.*;
 import gplx.xowa.htmls.js.*;
 import gplx.xowa.wikis.pages.*;
-class Http_server_wkr implements Gfo_invk {
+public class Http_server_wkr implements Gfo_invk {
 	private final    int uid;
 	private final    Http_server_mgr server_mgr;
 	private final    Http_server_wtr server_wtr;
@@ -105,7 +105,7 @@ class Http_server_wkr implements Gfo_invk {
 			page_html = url_parser.Err_msg();
 		}
 		else {
-			page_html = app.Http_server().Parse_page_to_html(data__client, url_parser.Wiki(), url_parser.Page(), url_parser.Action(), url_parser.Popup(), url_parser.Popup_mode(), url_parser.Popup_id());
+			page_html = app.Http_server().Parse_page_to_html(data__client, url_parser.Wiki(), url_parser.Page(), url_parser.Qarg(), url_parser.Action(), url_parser.Popup(), url_parser.Popup_mode(), url_parser.Popup_id());
 			page_html = Convert_page(page_html, root_dir_http, String_.new_u8(url_parser.Wiki()));
 		}
 		Xosrv_http_wkr_.Write_response_as_html(client_wtr, Bool_.N, page_html);
@@ -136,10 +136,11 @@ class Http_server_wkr implements Gfo_invk {
 	.Add_str_int("/exec/gfs"	, Tid_post_url_gfs)
 	;
 	private static String Convert_page(String page_html, String root_dir_http, String wiki_domain) {
+		page_html = String_.Replace(page_html, "file:////home/lnxusr/xowa/file/", "/fsys/file/");
 		page_html = String_.Replace(page_html, root_dir_http		, "/fsys/");
 		page_html = String_.Replace(page_html, "xowa-cmd:"			, "/exec/");
-		page_html = String_.Replace(page_html, "<a href=\"/wiki/"	, "<a href=\"/" + wiki_domain + "/wiki/");
-		page_html = String_.Replace(page_html, "<a href='/wiki/"	, "<a href='/" + wiki_domain + "/wiki/");
+		page_html = String_.Replace(page_html, " href=\"/wiki/"	    , " href=\"/" + wiki_domain + "/wiki/");
+		page_html = String_.Replace(page_html, " href='/wiki/"	    , " href='/" + wiki_domain + "/wiki/");
 		page_html = String_.Replace(page_html, "action=\"/wiki/"	, "action=\"/" + wiki_domain + "/wiki/");
 		page_html = String_.Replace(page_html, "/site"				, "");
 		return page_html;
@@ -150,8 +151,11 @@ class Http_server_wkr implements Gfo_invk {
 		return this;
 	}	public static final String Invk_run = "run";
 	private static final    byte[] 
-	  Url__home = Bry_.new_a7("/"), Url__fsys = Bry_.new_a7("/fsys/")
+	  Url__home = Bry_.new_a7("/")
 	, Url__exec = Bry_.new_a7("/exec/"), Url__exec_2 = Bry_.new_a7("/xowa-cmd:")
+	;
+	public static final    byte[]
+	  Url__fsys = Bry_.new_a7("/fsys/")
 	;
 	private static final    int Url__fsys_len = Url__fsys.length;
 }

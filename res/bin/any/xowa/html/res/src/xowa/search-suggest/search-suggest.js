@@ -37,10 +37,36 @@ function receiveSuggestions (search, suggestions) {
 }
 window.receiveSuggestions = receiveSuggestions;
 function fetchSuggestions () {
-	if (xowa_mode_is_server)
-		xowa_exec_async(function(){}, 'get_search_suggestions', currentSearch, 'receiveSuggestions');
+	if (xowa_global_values.mode_is_http) {
+      var wiki = xowa.page.wiki;
+      var search = document.getElementById("searchInput").value;
+      sendByAjaxWithCallback
+      ( 'xowa.search.ui.suggest'
+      , { wiki:   wiki
+        , search: search
+        , cbk:    "receiveSuggestions"
+        }
+        , function(xreq)
+          {
+            eval(xreq.responseText);
+          }
+        );
+  }
 	else
 		xowa_exec('get_search_suggestions', currentSearch, 'receiveSuggestions');
+}
+function sendByAjaxWithCallback(cmd, data, cbk) {
+    var xreq = new XMLHttpRequest();
+    xreq.onreadystatechange = function() {
+      if (xreq.readyState == 4 && xreq.status == 200) {
+        cbk(xreq)
+      }
+    };
+    var form_data = new FormData();
+    form_data.append('msg', JSON.stringify({cmd:cmd, data:data}));
+    form_data.append('app_mode', 'http_server');
+    xreq.open("POST", '/exec/json', true);
+    xreq.send(form_data);
 }
 
 function renderSuggestion (page_db, page_display) {
@@ -49,7 +75,11 @@ function renderSuggestion (page_db, page_display) {
 		liNode = document.createElement('li');
 	textNode.innerHTML = page_display;
 	textNode.setAttribute('xowa_page_db', page_db);
-	linkNode.href = '/wiki/' + page_db;
+  var href = '/wiki/' + page_db;
+  if (xowa_global_values.mode_is_http) {
+    href = '/' + xowa.page.wiki + href;
+  }
+	linkNode.href = href;
 	linkNode.appendChild(textNode);
 	liNode.appendChild(linkNode);
 	return liNode;
@@ -60,6 +90,7 @@ function showSuggestions (suggestions) {
 		return;
 	}
 	suggestionList.style.display = '';
+  suggestionList.style.height = 'auto'; // .vector tabs ul {height:100%} causes all search-suggest rows to collapse into one; DATE:2019-08-04
 	var i, li;
 	for (i = 0; i < suggestions.length; i += 2) {
 		var page_db = suggestions[i];
@@ -138,6 +169,7 @@ function init () {
 	suggestionList = document.createElement('ul');
 	suggestionList.id = 'xowa-search-suggestions';
 	suggestionList.style.display = 'none';
+	suggestionList.style.height = 'auto !important';
 	document.getElementById('simpleSearch').appendChild(suggestionList);
 	searchInput.addEventListener('keyup', onKeyUp, false);
 	searchInput.addEventListener('keydown', onKeyDown, false);
@@ -149,5 +181,4 @@ function init () {
 }
 
 document.addEventListener('DOMContentLoaded', init, false);
-
 })();
