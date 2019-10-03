@@ -13,12 +13,17 @@ The terms of each license can be found in the source code repository:
 GPLv3 License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-GPLv3.txt
 Apache License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-APACHE2.txt
 */
-package gplx.xowa.xtns.wbases.claims; import gplx.*; import gplx.xowa.*; import gplx.xowa.xtns.*; import gplx.xowa.xtns.wbases.*;
-public class Wbase_references_grp {
-	public Wbase_references_grp(Wbase_claim_grp_list snaks, int[] snaks_order) {
-		this.snaks = snaks;
-		this.snaks_order = snaks_order;
+package gplx.xowa.xtns.scores; import gplx.*; import gplx.xowa.*; import gplx.xowa.xtns.*;
+import org.junit.*;
+public class Score_html_tst {
+	private final    Score_html_fxt fxt = new Score_html_fxt();
+	@Before public void init() {
+		fxt.Clear();
 	}
-	public Wbase_claim_grp_list Snaks() {return snaks;} private final    Wbase_claim_grp_list snaks;
-	public int[] Snaks_order() {return snaks_order;} private final    int[] snaks_order;
+	@Test   public void Basic() {
+		String wtxt = fxt.Basic__wtxt();
+		fxt.Test__hview(wtxt, fxt.Hdump_n_().Basic__html(Bool_.Y));
+		fxt.Test__hdump(wtxt, fxt.Hdump_y_().Basic__html(Bool_.N), fxt.Basic__html(Bool_.Y));
+		fxt.Exec__Fill_page();
+	}
 }
