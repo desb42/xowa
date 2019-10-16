@@ -13,14 +13,14 @@ The terms of each license can be found in the source code repository:
 GPLv3 License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-GPLv3.txt
 Apache License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-APACHE2.txt
 */
-package gplx.xowa.xtns.wbases.claims; import gplx.*; import gplx.xowa.*; import gplx.xowa.xtns.*; import gplx.xowa.xtns.wbases.*;
-public class Wbase_references_grp {
-	public Wbase_references_grp(byte[] hash, Wbase_claim_grp_list snaks, int[] snaks_order) {
-		this.hash = hash;
-		this.snaks = snaks;
-		this.snaks_order = snaks_order;
+package gplx.xowa.wikis.nss; import gplx.*; import gplx.xowa.*; import gplx.xowa.wikis.*;
+public class Xow_ns_mgr_name_itm {
+	public Xow_ns_mgr_name_itm(Xow_ns ns, byte[] name) {
+		this.ns = ns;
+		this.name = name;
+		this.name_len = name.length;
 	}
-	public byte[] Hash() {return hash;} private final    byte[] hash;
-	public Wbase_claim_grp_list Snaks() {return snaks;} private final    Wbase_claim_grp_list snaks;
-	public int[] Snaks_order() {return snaks_order;} private final    int[] snaks_order;
+	public Xow_ns Ns() {return ns;} private final    Xow_ns ns;
+	public byte[] Name() {return name;} private final    byte[] name;
+	public int Name_len() {return name_len;} private final    int name_len;
 }

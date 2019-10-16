@@ -13,14 +13,11 @@ The terms of each license can be found in the source code repository:
 GPLv3 License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-GPLv3.txt
 Apache License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-APACHE2.txt
 */
-package gplx.xowa.xtns.wbases.claims; import gplx.*; import gplx.xowa.*; import gplx.xowa.xtns.*; import gplx.xowa.xtns.wbases.*;
-public class Wbase_references_grp {
-	public Wbase_references_grp(byte[] hash, Wbase_claim_grp_list snaks, int[] snaks_order) {
-		this.hash = hash;
-		this.snaks = snaks;
-		this.snaks_order = snaks_order;
+package gplx.xowa.xtns.pfuncs.pages; import gplx.*; import gplx.xowa.*; import gplx.xowa.xtns.*; import gplx.xowa.xtns.pfuncs.*;
+import org.junit.*; import gplx.xowa.wikis.ttls.*;
+public class Pfunc_pagelanguage__tst {
+	private final    Xop_fxt fxt = new Xop_fxt();
+	@Test  public void Basic() {
+		fxt.Test__parse__tmpl_to_html("{{PAGELANGUAGE}}", "en");
 	}
-	public byte[] Hash() {return hash;} private final    byte[] hash;
-	public Wbase_claim_grp_list Snaks() {return snaks;} private final    Wbase_claim_grp_list snaks;
-	public int[] Snaks_order() {return snaks_order;} private final    int[] snaks_order;
 }
