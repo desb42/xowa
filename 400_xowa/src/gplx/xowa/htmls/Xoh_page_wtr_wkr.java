@@ -86,8 +86,9 @@ public class Xoh_page_wtr_wkr {
 		DateAdp modified_on = page.Db().Page().Modified_on();
 		byte[] modified_on_msg = Bry_.Empty;
 		if (modified_on != DateAdp_.MinValue) {
-			wiki.Parser_mgr().Date_fmt_bldr().Format(tmp_bfr, wiki, wiki.Lang(), modified_on, Pft_func_formatdate.Fmt_dmy);
-			modified_on_msg = wiki.Msg_mgr().Val_by_key_args(Key_lastmodifiedat, tmp_bfr.To_bry_and_clear(), modified_on.XtoStr_fmt_HHmm());
+			modified_on_msg = wiki.Msg_mgr().Val_by_key_args(Key_lastmodifiedat, 
+					                       wiki.Lang().Time_format_mgr().Get_date_defaultfmt(wiki, modified_on),
+					                       wiki.Lang().Time_format_mgr().Get_time_defaultfmt(wiki, modified_on));
 		}
 
 		byte[] page_body_class = Xoh_page_body_cls.Calc(tmp_bfr, page_ttl, page_tid);

@@ -162,8 +162,10 @@ public class Pft_fmt_itm_ {
 	// TODO_OLD: space; "
 	;
 
-	public static Pft_fmt_itm[] Parse(Xop_ctx ctx, byte[] fmt) {
-		List_adp fmt_itms = ctx.Wiki().Parser_mgr().Time_parser_itms();
+	//public static Pft_fmt_itm[] Parse(Xop_ctx ctx, byte[] fmt) {
+	public static Pft_fmt_itm[] Parse(byte[] fmt) {
+            List_adp fmt_itms = List_adp_.New();
+		//List_adp fmt_itms = ctx.Wiki().Parser_mgr().Time_parser_itms();
 		Btrie_fast_mgr trie = Pft_fmt_itm_.Regy;
 		Btrie_rv trv = new Btrie_rv();
 		int i = 0, fmt_len = fmt.length;

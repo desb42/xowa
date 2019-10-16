@@ -23,7 +23,7 @@ public class Pft_func_time extends Pf_func_base {
 	@Override public void Func_evaluate(Bry_bfr bfr, Xop_ctx ctx, Xot_invk caller, Xot_invk self, byte[] src) {// REF.MW:ParserFunctions_body.php
 		int self_args_len = self.Args_len();
 		byte[] arg_fmt = Eval_argx(ctx, src, caller, self);
-		Pft_fmt_itm[] fmt_ary = Pft_fmt_itm_.Parse(ctx, arg_fmt);
+		Pft_fmt_itm[] fmt_ary = Pft_fmt_itm_.Parse(arg_fmt);
 		byte[] arg_date = Pf_func_.Eval_arg_or_empty(ctx, src, caller, self, self_args_len, 0);
 		byte[] arg_lang = Pf_func_.Eval_arg_or_empty(ctx, src, caller, self, self_args_len, 1);
 		Bry_bfr error_bfr = Bry_bfr_.New();
@@ -62,34 +62,5 @@ class DateAdpTranslator_xapp {
 		byte[] itm_val = lang.Msg_mgr().Val_by_id(type + val); 
 		if (itm_val != null)
 			bb.Add(itm_val);
-	}
-}
-class Pfxtp_roman {
-	public static void ToRoman(int num, Bry_bfr bfr) {
-		if (num > 3000 || num <= 0) {
-			bfr.Add_int_variable(num);
-			return;
-		}
-		int pow10 = 1000;
-		for (int i = 3; i > -1; i--) {
-			if (num >= pow10) {
-				bfr.Add(Names[i][Math_.Trunc(num / pow10)]);
-			}
-			num %= pow10;
-			pow10 /= 10;
-		} 
-	}
-	private static byte[][][] Names = new byte[][][]
-		{ Bry_dim2_new_("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X")
-		, Bry_dim2_new_("", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC", "C")
-		, Bry_dim2_new_("", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM", "M")
-		, Bry_dim2_new_("", "M", "MM", "MMM")
-		};
-	private static byte[][] Bry_dim2_new_(String... names) {
-		int len = names.length;
-		byte[][] rv = new byte[len][];
-		for (int i = 0; i < len; i++)
-			rv[i] = Bry_.new_u8(names[i]);
-		return rv;
 	}
 }

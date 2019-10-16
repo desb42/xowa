@@ -73,7 +73,7 @@ public class Scrib_lib_language implements Scrib_lib {
 	, Invk_formatNum = "formatNum", Invk_formatDate = "formatDate", Invk_formatDuration = "formatDuration", Invk_getDurationIntervals = "getDurationIntervals", Invk_parseFormattedNumber = "parseFormattedNumber"
 	, Invk_convertPlural = "convertPlural", Invk_convertGrammar = "convertGrammar", Invk_gender = "gender", Invk_isRTL = "isRTL"
 	;
-	private static final    String[] Proc_names = String_.Ary
+	private static final	String[] Proc_names = String_.Ary
 	( Invk_getContLangCode, Invk_isSupportedLanguage, Invk_isKnownLanguageTag
 	, Invk_isValidCode, Invk_isValidBuiltInCode, Invk_fetchLanguageName, Invk_fetchLanguageNames, Invk_getFallbacksFor
 	, Invk_lcfirst, Invk_ucfirst, Invk_lc, Invk_uc, Invk_caseFold
@@ -176,17 +176,21 @@ public class Scrib_lib_language implements Scrib_lib {
 	private boolean Case_1st(Scrib_proc_args args, Scrib_proc_rslt rslt, boolean upper) {
 		Xol_lang_itm lang = lang_(args);
 		byte[] word = args.Pull_bry(1);
-		Bry_bfr bfr = core.Wiki().Utl__bfr_mkr().Get_b128();
+/*		Bry_bfr bfr = core.Wiki().Utl__bfr_mkr().Get_b128();
 		try {
 			return rslt.Init_obj(lang.Case_mgr().Case_build_1st(bfr, upper, word, 0, word.length));
 		} finally {bfr.Mkr_rls();}
+*/
+                byte[] copy_word = Bry_.Mid(word, 0);
+		return rslt.Init_obj(DB_case_cvt.Up_low_1st(copy_word, 0, word.length, upper));
 	}
 	public boolean Lc(Scrib_proc_args args, Scrib_proc_rslt rslt) {return Case_all(args, rslt, Bool_.N);}
 	public boolean Uc(Scrib_proc_args args, Scrib_proc_rslt rslt) {return Case_all(args, rslt, Bool_.Y);}
 	private boolean Case_all(Scrib_proc_args args, Scrib_proc_rslt rslt, boolean upper) {
 		Xol_lang_itm lang = lang_(args);
 		byte[] word = args.Pull_bry(1);
-		return rslt.Init_obj(lang.Case_mgr().Case_build(upper, word, 0, word.length));
+//		return rslt.Init_obj(lang.Case_mgr().Case_build(upper, word, 0, word.length));
+		return rslt.Init_obj(DB_case_cvt.Case_cvt(word, word.length, upper));
 	}
 	public boolean CaseFold(Scrib_proc_args args, Scrib_proc_rslt rslt) {return Uc(args, rslt);}	// REF.MW:Language.php!caseFold; http://www.w3.org/International/wiki/Case_folding
 	public boolean FormatNum(Scrib_proc_args args, Scrib_proc_rslt rslt) {
@@ -211,7 +215,7 @@ public class Scrib_lib_language implements Scrib_lib {
 
 		// init vars
 		int date_bry_len = date_bry.length;
-		Pft_fmt_itm[] fmt_ary = Pft_fmt_itm_.Parse(core.Ctx(), fmt_bry);
+		Pft_fmt_itm[] fmt_ary = Pft_fmt_itm_.Parse(fmt_bry);
 		Xowe_wiki wiki = core.Wiki();
 		Bry_bfr tmp_bfr = wiki.Utl__bfr_mkr().Get_b512();
 
