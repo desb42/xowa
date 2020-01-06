@@ -14,6 +14,12 @@ GPLv3 License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-GPLv3.txt
 Apache License: https://github.com/gnosygnu/xowa/blob/master/LICENSE-APACHE2.txt
 */
 package gplx.xowa.mediawiki; import gplx.*; import gplx.xowa.*;
-public class XophpBry_ {
-	public static final    byte[] False = null; // handles code like "if ($var === false)" where var is an Object;
+public class XophpIo_ {
+	public static String file_get_contents(String path) {
+		String rv = Io_mgr.Instance.LoadFilStr(path);
+		return String_.Eq(rv, String_.Empty) ? XophpString_.Null : rv;
+	}
+	public static boolean file_exists(String path) {
+		return Io_mgr.Instance.ExistsFil(Io_url_.new_fil_(path));
+	}
 }
